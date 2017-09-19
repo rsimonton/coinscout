@@ -28,7 +28,7 @@ class App extends Component {
           <h2>Welcome to CoinScout</h2>
         </div>
         <div className="App-coins">
-          <Coin exchange="Bitfinex" symbol="ETH" to="USD" />
+          <Coin exchange="Coinbase" symbol="ETH" to="USD" />
           <Coin exchange="Bitfinex" symbol="OMG" to="USD" />
         </div>
       </div>      
