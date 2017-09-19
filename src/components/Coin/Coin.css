@@ -1,5 +1,6 @@
 .Coin {
-	border: solid 1px #888;
+	background-color: #eee;
+	border: solid 1px #222;
 	border-radius: 6px;
 	box-shadow: 1px 2px 2px #ccc;
 	display: inline-block;

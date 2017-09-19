@@ -1,5 +1,5 @@
 import io from 'socket.io-client';
-import CCC from './crypto-compare.js';
+import CCC from './vendor.js';
 
 
 const debug = true;
@@ -33,7 +33,7 @@ function apiInit(apiEndpoint) {
 function apiSubscribe(exchange, symbol, to, callback) {
 	
 	if(!initialized) {
-		throw 'Error: api.js -- you must call apiInit before adding subscriptions';
+		throw new Error('api.js -- you must call apiInit before adding subscriptions');
 	}
 
 	let subKey = [

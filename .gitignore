@@ -22,3 +22,6 @@ yarn-error.log*
 
 # CoinScout
 src/api/config.json
+
+# Sublime Text
+coinscout.sublime-*

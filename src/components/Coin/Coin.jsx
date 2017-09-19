@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { apiSubscribe } from 'api.js';
+import { apiSubscribe } from 'api/CryptoCompare/api.js';
 
 class Coin extends Component {
 
@@ -18,7 +18,7 @@ class Coin extends Component {
 	}
 
 	handleData(data) {
-		console.dir(data);
+		//console.dir(data);
 
 		this.setState(Object.assign(
 			{_prev: this.state},
@@ -42,11 +42,8 @@ class Coin extends Component {
 	}
 
 	render() {
-		
-		const {symbol, ...props} = this.props;
-
 		return (
-			<div className={'Coin Coin-' + symbol}>
+			<div className={'Coin Coin-' + this.props.symbol}>
 				<div className="Coin-current">
 					<span className="Coin-symbol">{this.state.FROMSYMBOL}</span>: <span className={'Coin-price Coin-price-' + this.state.lastChange}>${parseFloat(this.state.PRICE).toFixed(2)}</span>
 				</div>
