@@ -1,0 +1,32 @@
+.Coin {
+	border: solid 1px #888;
+	border-radius: 6px;
+	box-shadow: 1px 2px 2px #ccc;
+	display: inline-block;
+	margin: 20px;
+	overflow: hidden;
+	padding: 16px 8px;
+	width: 180px;
+}
+
+.Coin-current {
+	font-size: 24px;
+	font-weight: bold;
+	text-align: center;
+}
+
+.Coin-price-decreasing {
+	color: red;
+}
+
+.Coin-price-increasing {
+	color: green;
+}
+
+.Coin-price-unchanged {
+	color: black;
+}
+
+.Coin-symbol {
+	color: blue;
+}
