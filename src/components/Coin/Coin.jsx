@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
+import CCC from 'api/CryptoCompare/vendor.js';
 import { apiSubscribe } from 'api/CryptoCompare/api.js';
 
-class Coin extends Component {
+import './Coin.css';
 
+class Coin extends Component {
+	
 	constructor(props) {
 		super(props);
 
 		this.state = {};
-		//this.state[this.props.symbol] = 'Connecting...';
 
 		apiSubscribe(
 			this.props.exchange,
@@ -19,33 +21,26 @@ class Coin extends Component {
 
 	handleData(data) {
 		//console.dir(data);
-
-		this.setState(Object.assign(
-			{_prev: this.state},
-			data
-		));
-	
-		let newPrice = parseFloat(this.state.PRICE),
-			// If we don' have a last price yet, set to current price (mimic 'unchanged')
-			prev = this.state._prev.PRICE || this.state.PRICE,
-			prevPrice = parseFloat(prev);
-
-		let lastChange = newPrice > prevPrice
-			? 'increasing'
-			: (newPrice < prevPrice
-				? 'decreasing'
-				: 'unchanged');
-
-		this.setState({
-			lastChange: lastChange === 'unchanged' ? this.state._prev.lastChange : lastChange
-		});
+		data.FLAGS === '4' && delete data.FLAGS;
+		this.setState(data);
 	}
 
 	render() {
+
+		const pricePrecision = 2;	// decimal places
+		const lastChange = [
+			null,
+			'increasing',
+			'decreasing',
+			null,
+			'unchanged'
+		];
+	
 		return (
 			<div className={'Coin Coin-' + this.props.symbol}>
 				<div className="Coin-current">
-					<span className="Coin-symbol">{this.state.FROMSYMBOL}</span>: <span className={'Coin-price Coin-price-' + this.state.lastChange}>${parseFloat(this.state.PRICE).toFixed(2)}</span>
+					<div className="Coin-pair">{this.state.FROMSYMBOL} / {this.state.TOSYMBOL}</div>
+					<span className={'Coin-price Coin-price-' + lastChange[this.state.FLAGS]}>{CCC.STATIC.CURRENCY.SYMBOL[this.state.TOSYMBOL]} {parseFloat(this.state.PRICE).toFixed(pricePrecision)}</span>
 				</div>
 			</div>
 		);
