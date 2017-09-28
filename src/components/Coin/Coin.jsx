@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import CCC from 'api/CryptoCompare/vendor.js';
+import CoinPrice from 'components/Coin/CoinPrice.jsx';
 import { apiSubscribe } from 'api/CryptoCompare/api.js';
 
 import './Coin.css';
@@ -26,21 +26,11 @@ class Coin extends Component {
 	}
 
 	render() {
-
-		const pricePrecision = 2;	// decimal places
-		const lastChange = [
-			null,
-			'increasing',
-			'decreasing',
-			null,
-			'unchanged'
-		];
-	
 		return (
 			<div className={'Coin Coin-' + this.props.symbol}>
 				<div className="Coin-current">
 					<div className="Coin-pair">{this.state.FROMSYMBOL} / {this.state.TOSYMBOL}</div>
-					<span className={'Coin-price Coin-price-' + lastChange[this.state.FLAGS]}>{CCC.STATIC.CURRENCY.SYMBOL[this.state.TOSYMBOL]} {parseFloat(this.state.PRICE).toFixed(pricePrecision)}</span>
+					<CoinPrice flags={this.state.FLAGS} symbol={this.state.TOSYMBOL} price={this.state.PRICE} />
 				</div>
 			</div>
 		);

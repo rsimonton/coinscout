@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+
+import ApiManager from 'api/ApiManager.js';
 import Coin from 'components/Coin/Coin.jsx';
 import { apiInit, apiFinalize } from 'api/CryptoCompare/api.js';
 
@@ -6,13 +8,14 @@ import coinConfig from 'config/coins.js';
 import logo from './logo.svg';
 
 import './App.css';
-import './components/Coin/Coin.css';
 
 class App extends Component {
 
   constructor(props) {
     super(props);
     this.state = {coinConfig: coinConfig};
+
+    this.apiManager = new ApiManager();
 
     apiInit();
   }
