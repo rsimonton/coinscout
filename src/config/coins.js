@@ -1,48 +1,75 @@
 const coins = [
 	{
-		"symbol": "ETH",
-		"exchange": "Coinbase",
-		"per": "USD"
+		'name': 'Bitcoin',
+		'symbol': 'BTC',
+		'exchange': 'Coinbase',
+		'per': 'USD'
 	},
 	{
-		"symbol": "OMG",
-		"exchange": "Bitfinex",
-		"per": "USD"
+		'name': 'Ethereum',
+		'symbol': 'ETH',
+		'exchange': 'Coinbase',
+		'per': 'USD'
 	},
 	{
-		"symbol": "XRP",
-		"exchange": "Bitstamp",
-		"per": "USD"
+		'name': 'OmiseGO',
+		'symbol': 'OMG',
+		'exchange': 'Bitfinex',
+		'per': 'USD'
 	},
 	{
-		"symbol": "NLC2",
-		"exchange": "Yobit",
-		"per": "BTC"
+		'name': 'Ripple',
+		'symbol': 'XRP',
+		'exchange': 'Bitstamp',
+		'per': 'USD'
 	},
 	{
-		"symbol": "PAY",
-		"exchange": "BitTrex",
-		"per": "BTC"
+		'name': 'TenX',
+		'symbol': 'PAY',
+		'exchange': 'Liqui',
+		'per': 'USDT'
 	},
 	{
-		"symbol": "GNT",
-		"exchange": "BitTrex",
-		"per": "BTC"
+		'name': 'Golem',
+		'symbol': 'GNT',
+		'exchange': 'Liqui',
+		'per': 'USDT'
 	},
 	{
-		"symbol": "ZRX",
-		"exchange": "Poloniex",
-		"per": "BTC"
+		'name': '0x',
+		'symbol': 'ZRX',
+		'exchange': 'Liqui',
+		'per': 'USDT'
 	},
 	{
-		"symbol": "XEM",
-		"exchange": "BitTrex",
-		"per": "BTC"
+		'name': 'Nem',
+		'symbol': 'XEM',
+		'exchange': 'HitBTC',
+		'per': 'USD'
 	},
 	{
-		"symbol": "QTUM",
-		"exchange": "BitTrex",
-		"per": "BTC"
+		'name': 'Qtum',
+		'symbol': 'QTUM',
+		'exchange': 'HitBTC',
+		'per': 'ETH'
+	},
+	{
+		'name': 'ChainLink',
+		'symbol': 'LINK',
+		'exchange': 'Binance',
+		'per': 'ETH'
+	},
+	{
+		'name': 'Iota',
+		'symbol': 'IOT',
+		'exchange': 'Bitfinex',
+		'per': 'USD'
+	},
+	{
+		'name': 'Request Network',
+		'symbol': 'REQ',
+		'exchange': 'EtherDelta',
+		'per': 'ETH'
 	}
 ];
 

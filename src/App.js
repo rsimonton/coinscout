@@ -39,7 +39,7 @@ class App extends Component {
 
     // Ok React, this is pretty rad - render Coins from JSON config array, write into variable
     const coins = this.state.coinConfig.map((coin, index) =>
-      <Coin key={coin.symbol} exchange={coin.exchange} symbol={coin.symbol} to={coin.per} />
+      <Coin name={coin.name} key={coin.symbol} exchange={coin.exchange} symbol={coin.symbol} to={coin.per} />
     );
 
     return (

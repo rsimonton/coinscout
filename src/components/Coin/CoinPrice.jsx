@@ -5,7 +5,12 @@ class CoinPrice extends Component {
 	
 	render() {
 
-		const pricePrecision = 2;	// decimal places
+		const pricePrecision = this.props.price
+			? (this.props.symbol.match(/^USDT?$/)
+				? 2
+				: 1 + this.props.price.toString().search(/[1-9]/))	// decimal places
+			: 0;
+		
 		const lastChange = [
 			null,
 			'increasing',

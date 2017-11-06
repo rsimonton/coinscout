@@ -5,7 +5,7 @@ import CCC from './vendor.js';
 const DEBUG = true;
 const API_ENDPOINT = 'https://www.cryptocompare.com/api/data/';
 const STREAMING_ENDPOINT = 'wss://streamer.cryptocompare.com';
-const QUOTE_TYPE = CCC.STATIC.TYPE.CURRENTAGG;
+const QUOTE_TYPE = CCC.STATIC.TYPE.CURRENT;
 
 let ws,
 	coinInfos,

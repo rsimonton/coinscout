@@ -17,6 +17,12 @@ class Coin extends Component {
 			this.props.to,
 			this.handleData.bind(this)
 		);
+
+		this.handleClick = this.handleClick.bind(this);
+	}
+
+	handleClick() {
+		window.open('https://coinmarketcap.com/currencies/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/');
 	}
 
 	handleData(data) {
@@ -26,8 +32,11 @@ class Coin extends Component {
 	}
 
 	render() {
+
+		let {onClick, ...props} = this.props;
+
 		return (
-			<div className={'Coin Coin-' + this.props.symbol}>
+			<div className={'Coin Coin-' + this.props.symbol} onClick={this.handleClick}>
 				<div className="Coin-current">
 					<div className="Coin-pair">{this.state.FROMSYMBOL} / {this.state.TOSYMBOL}</div>
 					<CoinPrice flags={this.state.FLAGS} symbol={this.state.TOSYMBOL} price={this.state.PRICE} />
