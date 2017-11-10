@@ -8,7 +8,6 @@ const STREAMING_ENDPOINT = 'wss://streamer.cryptocompare.com';
 const QUOTE_TYPE = CCC.STATIC.TYPE.CURRENT;
 
 let ws,
-	coinInfos,
 	initialized = false,
 	subscriptions = {};
 
@@ -20,8 +19,7 @@ function apiInit() {
 	//
 	fetch(API_ENDPOINT + 'coinlist/', {'mode': 'no-cors'})
 		.then(function(response) {
-			coinInfos = response;
-			console.dir(coinInfos);
+			//console.dir(response);
 		})
 		.catch(function(err) {
 			throw Error('api.js -- failed to load coin infos: ' + err);
@@ -91,11 +89,6 @@ function apiFinalize() {
 			subscriptions[subKey](CCC.CURRENT.unpack(data));
 		}
 	});
-}
-
-
-function getCoinInfo(symbol) {
-
 }
 
 

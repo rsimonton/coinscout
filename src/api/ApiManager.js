@@ -5,7 +5,7 @@ class ApiManager {
 
 	constructor() {	
 		// Can't get Bittrex to work, they don't enable CORS. Leaving for future reference
-		//this.bittrexClient = new BittrexClient(config.Bittrex);
+		this.bittrexClient = new BittrexClient(config.Bittrex);
 	}
 
 	initApi(name) {

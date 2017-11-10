@@ -1,13 +1,14 @@
 .Coin {
 	background-color: #eee;
-	border: solid 1px #222;
+	border: solid 1px #666;
 	border-radius: 6px;
 	box-shadow: 1px 2px 2px #ccc;
 	cursor: pointer;
 	display: inline-block;
+	font-family: 'Open Sans', sans-serif;
 	margin: 14px;
 	overflow: hidden;
-	padding: 16px 8px;
+	padding: 12px 16px;
 	width: 180px;
 }
 
@@ -16,16 +17,31 @@
 	box-shadow: 2px 3px 3px #ccc;
 }
 
-.Coin-current {
+.Coin-label {
+	color: #777;
 	font-size: 24px;
-	font-weight: bold;
-	text-align: center;
+	font-weight: 500;
 }
 
-.Coin-pair {
-	color: blue;
+.Coin-label .Coin-logo {
+	background-repeat: no-repeat;
+	background-position: center center;
+	display: inline-block;
+	height: 32px;
+	width: 32px;
+	border-radius: 16px;
+	margin-right: 8px;
 }
 
+.Coin-label .Coin-name {
+	position: relative;
+	top: -8px;
+}
+
+.Coin-price {
+	float: right;
+	font-size: 22px;
+}
 .Coin-price-decreasing {
 	color: red;
 }

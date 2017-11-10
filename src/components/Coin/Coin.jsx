@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import CoinLabel from 'components/Coin/CoinLabel.jsx';
 import CoinPrice from 'components/Coin/CoinPrice.jsx';
 import { apiSubscribe } from 'api/CryptoCompare/api.js';
 
@@ -14,7 +15,7 @@ class Coin extends Component {
 		apiSubscribe(
 			this.props.exchange,
 			this.props.symbol,
-			this.props.to,
+			this.props.denomination,
 			this.handleData.bind(this)
 		);
 
@@ -26,7 +27,7 @@ class Coin extends Component {
 	}
 
 	handleData(data) {
-		//console.dir(data);
+		console.dir(data);
 		data.FLAGS === '4' && delete data.FLAGS;
 		this.setState(data);
 	}
@@ -37,9 +38,11 @@ class Coin extends Component {
 
 		return (
 			<div className={'Coin Coin-' + this.props.symbol} onClick={this.handleClick}>
-				<div className="Coin-current">
-					<div className="Coin-pair">{this.state.FROMSYMBOL} / {this.state.TOSYMBOL}</div>
-					<CoinPrice flags={this.state.FLAGS} symbol={this.state.TOSYMBOL} price={this.state.PRICE} />
+				<div>					
+					<CoinLabel {...props} />
+					<div className="Coin-data">
+						<CoinPrice flags={this.state.FLAGS} price={this.state.PRICE} {...props} />
+					</div>
 				</div>
 			</div>
 		);

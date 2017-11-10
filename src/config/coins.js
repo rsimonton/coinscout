@@ -3,74 +3,88 @@ const coins = [
 		'name': 'Bitcoin',
 		'symbol': 'BTC',
 		'exchange': 'Coinbase',
-		'per': 'USD'
+		'denomination': 'USD'
 	},
 	{
 		'name': 'Ethereum',
 		'symbol': 'ETH',
 		'exchange': 'Coinbase',
-		'per': 'USD'
+		'denomination': 'USD'
 	},
 	{
 		'name': 'OmiseGO',
 		'symbol': 'OMG',
 		'exchange': 'Bitfinex',
-		'per': 'USD'
+		'denomination': 'USD'
 	},
 	{
 		'name': 'Ripple',
 		'symbol': 'XRP',
 		'exchange': 'Bitstamp',
-		'per': 'USD'
+		'denomination': 'USD'
 	},
 	{
 		'name': 'TenX',
 		'symbol': 'PAY',
 		'exchange': 'Liqui',
-		'per': 'USDT'
+		'denomination': 'USDT'
 	},
 	{
-		'name': 'Golem',
+		'name': 'Golem Network Tokens',
+		'label': 'Golemn',
 		'symbol': 'GNT',
 		'exchange': 'Liqui',
-		'per': 'USDT'
+		'denomination': 'USDT'
 	},
 	{
 		'name': '0x',
 		'symbol': 'ZRX',
 		'exchange': 'Liqui',
-		'per': 'USDT'
+		'denomination': 'USDT'
 	},
 	{
-		'name': 'Nem',
+		'name': 'NEM',
 		'symbol': 'XEM',
 		'exchange': 'HitBTC',
-		'per': 'USD'
+		'denomination': 'USD'
 	},
 	{
 		'name': 'Qtum',
 		'symbol': 'QTUM',
 		'exchange': 'HitBTC',
-		'per': 'ETH'
+		'denomination': 'ETH'
 	},
 	{
 		'name': 'ChainLink',
 		'symbol': 'LINK',
 		'exchange': 'Binance',
-		'per': 'ETH'
+		'denomination': 'ETH'
 	},
 	{
 		'name': 'Iota',
 		'symbol': 'IOT',
 		'exchange': 'Bitfinex',
-		'per': 'USD'
+		'denomination': 'USD'
 	},
 	{
 		'name': 'Request Network',
+		'label': 'Request',
 		'symbol': 'REQ',
 		'exchange': 'EtherDelta',
-		'per': 'ETH'
-	}
+		'denomination': 'ETH'
+	},
+	{	
+		'name': 'Augur',
+		'symbol': 'REP',
+		'exchange': 'Poloniex',
+		'denomination': 'BTC'
+	},
+	{
+		'name': 'DCORP',
+		'symbol': 'DRP',
+		'exchange': 'Cryptopia',
+		'denomination': 'BTC'
+	}	
 ];
 
 export default coins;
