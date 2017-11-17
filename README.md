@@ -4,7 +4,7 @@
 
 You'll need to have [Node.js installed](https://nodejs.org/en/download/)
 
-  1. Clone repo
+  1. Clone repo: [https://github.com/rsimonton/coinscout.git](https://github.com/rsimonton/coinscout.git)
   2. Copy `src/config/coinscout.template.js` to `src/config/coinscout.js`
   3. Read through comments in `coinscout.js` config file
   4. Add your portfolio and watchlist coins, save
