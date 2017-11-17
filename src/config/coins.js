@@ -65,7 +65,7 @@ const coins = {
 			'name': 'Request Network',
 			'label': 'Request',
 			'symbol': 'REQ',
-			'exchange': 'EtherDelta',
+			'exchange': 'Binance',
 			'market': 'ETH'
 		},
 		{	

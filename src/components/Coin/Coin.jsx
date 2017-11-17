@@ -32,7 +32,7 @@ class Coin extends Component {
 	}
 
 	handleData(data) {
-		console.dir(data);
+		//console.dir(data);
 		this.setState(data, function() {
 			this.props.onData(data)
 		});

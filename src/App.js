@@ -16,9 +16,8 @@ class App extends Component {
 		super(props);
 
 		//this.apiManager = new ApiManager();
-		this.rawPrices = {};
-		this.userDenomination = 'USD';  // for now...
-		
+		this.rawPrices = { USD: 1 };
+		this.userDenomination = 'USD';  // for now...		
 
 		this.state = {
 			// for now treat portfolio and watchlist the same
@@ -47,28 +46,23 @@ class App extends Component {
 		*/
 	}
 
-	componentDidUpdate() {
-
-	}
-
 	convertPrice(price, from, to) {
-		return price * this.rawPrices[from];
+		//console.dir(arguments);
+		return price * this.rawPrices[from] / this.rawPrices[to];
 	}
 
 	handleData(data) {
 		const prices = this.state.prices;
-		let convertedPrice = {}
+		let convertedPrice = {};
 
 		// Convert price iff user has overridden market set in coin config
-		convertedPrice[data.FROMSYMBOL] = this.userDenomination !== data.TOSYMBOL
+		convertedPrice[data.FROMSYMBOL] = this.userDenomination && this.userDenomination !== data.TOSYMBOL
 			? this.convertPrice(data.PRICE, data.TOSYMBOL, this.userDenomination)
 			: data.PRICE;
 
-		/*
-		console.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
-		console.dir(convertedPrice);
-		*/
-
+		//console.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
+		//console.dir(convertedPrice);
+		
 		this.rawPrices[data.FROMSYMBOL] = data.PRICE;
 		this.setState(Object.assign(prices, convertedPrice));
 	}
@@ -77,13 +71,13 @@ class App extends Component {
 
 		//const userPrefs = <UserPrefs convertValues="USD" />;
 		const coinConfig = this.state.coinConfig;
-		const coinPrices = this.state.prices;
+		const prices = this.state.prices;
 
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
 		const coins = coinConfig.map((coin, index) =>
 			<Coin key={index}
-				price={coinPrices[coin.symbol]}
-				denomination={this.userDenomination}
+				price={prices[coin.symbol]}
+				denomination={this.userDenomination || coin.market}
 				onData={this.handleData}
 				{...coin} />
 		);

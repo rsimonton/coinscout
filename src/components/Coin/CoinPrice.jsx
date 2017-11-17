@@ -19,17 +19,19 @@ class CoinPrice extends Component {
 	
 	render() {
 		const price = this.props.price;
-		const flags = this.props.flags;
+		const flags = parseInt(this.props.flags, 10);
 		const denomination = this.props.denomination;
 		
 		// Did the price go up/down or unchanged?
-		const change = flags === CoinPrice.UNCHANGED
+		const change = flags === CoinPrice.UNCHANGED || null === this.changeTypes[flags]
 			? this.lastChange
 			: this.changeTypes[flags];
 
+			//console.log('change: ' + flags + ' = ' + change);
+
 		// Set precision based on denomination if we have a price
 		const pricePrecision = price
-			? ('USD' === denomination ? (price < .2 ? 3 : 2) : 3 + price.toString().search(/[1-9]/))
+			? ('USD' === denomination ? (price < .2 ? 3 : 2) : 1 + price.toString().search(/[1-9]/))
 			: 0;
 
 		const priceConverted = parseFloat(price).toFixed(pricePrecision);
