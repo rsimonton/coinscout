@@ -1,6 +1,6 @@
-##CoinScout - A Cryptocurrency Portfolio Tracker
+## CoinScout - A Cryptocurrency Portfolio Tracker
 
-###Getting Started
+### Getting Started
 
   1. Clone repo
   2. Copy `src/config/coinscout.template.js` to `src/config/coinscout.js`
