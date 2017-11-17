@@ -5,7 +5,7 @@ import { apiInit, apiFinalize } from './api/CryptoCompare/api.js';
 //import ApiManager from 'api/ApiManager.js';
 //import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
 
-import coinConfig from './config/coins.js';
+import appConfig from './config/coinscout.js';
 import logo from './logo.svg';
 
 import './App.css';
@@ -16,12 +16,15 @@ class App extends Component {
 		super(props);
 
 		//this.apiManager = new ApiManager();
+		
+		// For now treat portfolio and watchlist the same
+		this.coinConfig = appConfig.portfolio.concat(appConfig.watchlist);			
+		this.normalizeValues = appConfig.normalizeValues;
+		this.pricePrecision = appConfig.pricePrecision;
 		this.rawPrices = { USD: 1 };
 		this.userDenomination = 'USD';  // for now...		
 
 		this.state = {
-			// for now treat portfolio and watchlist the same
-			coinConfig: coinConfig.portfolio.concat(coinConfig.watchlist),
 			prices: {},
 			signs: {}
 		};
@@ -56,7 +59,7 @@ class App extends Component {
 		let convertedPrice = {};
 
 		// Convert price iff user has overridden market set in coin config
-		convertedPrice[data.FROMSYMBOL] = this.userDenomination && this.userDenomination !== data.TOSYMBOL
+		convertedPrice[data.FROMSYMBOL] = this.normalizeValues && this.userDenomination !== data.TOSYMBOL
 			? this.convertPrice(data.PRICE, data.TOSYMBOL, this.userDenomination)
 			: data.PRICE;
 
@@ -70,14 +73,14 @@ class App extends Component {
 	render() {
 
 		//const userPrefs = <UserPrefs convertValues="USD" />;
-		const coinConfig = this.state.coinConfig;
 		const prices = this.state.prices;
 
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
-		const coins = coinConfig.map((coin, index) =>
+		const coinComponents = this.coinConfig.map((coin, index) =>
 			<Coin key={index}
 				price={prices[coin.symbol]}
-				denomination={this.userDenomination || coin.market}
+				denomination={this.normalizeValues ? this.userDenomination : coin.market}
+				pricePrecision={coin.pricePrecision || appConfig.pricePrecision}
 				onData={this.handleData}
 				{...coin} />
 		);
@@ -92,7 +95,7 @@ class App extends Component {
 			
 				<div className="App-content">
 					<div className="App-coins">
-						{coins}
+						{coinComponents}
 					</div>
 				</div>
 			

@@ -39,8 +39,9 @@ class Coin extends Component {
 	}
 
 	render() {
+		console.log(this.props);
 
-		const {...props} = this.props;
+		const {pricePrecision, ...props} = this.props;
 		const flags = this.state.FLAGS;
 
 		return (
@@ -48,7 +49,7 @@ class Coin extends Component {
 				<div>					
 					<CoinLabel name={this.name} label={this.label} />
 					<div className="Coin-data">
-						<CoinPrice flags={flags} {...props} />
+						<CoinPrice flags={flags} precision={pricePrecision} {...props} />
 					</div>
 				</div>
 			</div>
