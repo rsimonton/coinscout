@@ -2,7 +2,7 @@
 	"Bittrex": {
 		"version": "1.1",
 		"uri": "https://bittrex.com/api/1.1/",
-		"key": "1b2187f4236c4d87bda451b3ba6c5764",
-		"secret": "Secret:a6f20d83513b49c1a850396bb84c6c30"
+		"key": "",
+		"secret": ""
 	}
 }
