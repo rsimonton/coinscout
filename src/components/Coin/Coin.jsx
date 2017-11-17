@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import CoinLabel from 'components/Coin/CoinLabel.jsx';
-import CoinPrice from 'components/Coin/CoinPrice.jsx';
+import CoinLabel from './CoinLabel.jsx';
+import CoinPrice from './CoinPrice.jsx';
 import { apiSubscribe } from 'api/CryptoCompare/api.js';
 
 import './Coin.css';
@@ -10,16 +10,21 @@ class Coin extends Component {
 	constructor(props) {
 		super(props);
 
+		this.label = this.props.label;
+		this.name = this.props.name;
+		this.symbol = this.props.symbol;	// need a permanent reference
+		
 		this.state = {};
+
+		this.handleClick = this.handleClick.bind(this);
+		this.handleData = this.handleData.bind(this);
 
 		apiSubscribe(
 			this.props.exchange,
 			this.props.symbol,
-			this.props.denomination,
-			this.handleData.bind(this)
+			this.props.market,
+			this.handleData
 		);
-
-		this.handleClick = this.handleClick.bind(this);
 	}
 
 	handleClick() {
@@ -28,20 +33,22 @@ class Coin extends Component {
 
 	handleData(data) {
 		console.dir(data);
-		data.FLAGS === '4' && delete data.FLAGS;
-		this.setState(data);
+		this.setState(data, function() {
+			this.props.onData(data)
+		});
 	}
 
 	render() {
 
-		let {onClick, ...props} = this.props;
+		const {...props} = this.props;
+		const flags = this.state.FLAGS;
 
 		return (
-			<div className={'Coin Coin-' + this.props.symbol} onClick={this.handleClick}>
+			<div className={'Coin Coin-' + this.symbol} onClick={this.handleClick}>
 				<div>					
-					<CoinLabel {...props} />
+					<CoinLabel name={this.name} label={this.label} />
 					<div className="Coin-data">
-						<CoinPrice flags={this.state.FLAGS} price={this.state.PRICE} {...props} />
+						<CoinPrice flags={flags} {...props} />
 					</div>
 				</div>
 			</div>

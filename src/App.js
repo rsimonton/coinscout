@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 
+import Coin from './components/Coin/Coin.jsx';
+import { apiInit, apiFinalize } from './api/CryptoCompare/api.js';
 //import ApiManager from 'api/ApiManager.js';
-import Coin from 'components/Coin/Coin.jsx';
-import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
-import { apiInit, apiFinalize } from 'api/CryptoCompare/api.js';
+//import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
 
-import coinConfig from 'config/coins.js';
+import coinConfig from './config/coins.js';
 import logo from './logo.svg';
 
 import './App.css';
@@ -14,10 +14,21 @@ class App extends Component {
 
 	constructor(props) {
 		super(props);
-		this.state = {coinConfig: coinConfig};
 
 		//this.apiManager = new ApiManager();
+		this.rawPrices = {};
+		this.userDenomination = 'USD';  // for now...
+		
+
+		this.state = {
+			// for now treat portfolio and watchlist the same
+			coinConfig: coinConfig.portfolio.concat(coinConfig.watchlist),
+			prices: {},
+			signs: {}
+		};
+
 		this.handleData = this.handleData.bind(this);
+		
 		apiInit();
 	}
 
@@ -36,17 +47,45 @@ class App extends Component {
 		*/
 	}
 
-	handleData() {
-		
+	componentDidUpdate() {
+
+	}
+
+	convertPrice(price, from, to) {
+		return price * this.rawPrices[from];
+	}
+
+	handleData(data) {
+		const prices = this.state.prices;
+		let convertedPrice = {}
+
+		// Convert price iff user has overridden market set in coin config
+		convertedPrice[data.FROMSYMBOL] = this.userDenomination !== data.TOSYMBOL
+			? this.convertPrice(data.PRICE, data.TOSYMBOL, this.userDenomination)
+			: data.PRICE;
+
+		/*
+		console.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
+		console.dir(convertedPrice);
+		*/
+
+		this.rawPrices[data.FROMSYMBOL] = data.PRICE;
+		this.setState(Object.assign(prices, convertedPrice));
 	}
 
 	render() {
 
-		const userPrefs = <UserPrefs convertValues="USD" />;
+		//const userPrefs = <UserPrefs convertValues="USD" />;
+		const coinConfig = this.state.coinConfig;
+		const coinPrices = this.state.prices;
 
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
-		const coins = this.state.coinConfig.map((coin, index) =>
-			<Coin key={index} onData={this.handleData} userPrefs={userPrefs} {...coin} />
+		const coins = coinConfig.map((coin, index) =>
+			<Coin key={index}
+				price={coinPrices[coin.symbol]}
+				denomination={this.userDenomination}
+				onData={this.handleData}
+				{...coin} />
 		);
 
 		return (
@@ -58,7 +97,6 @@ class App extends Component {
 				</div>
 			
 				<div className="App-content">
-					
 					<div className="App-coins">
 						{coins}
 					</div>

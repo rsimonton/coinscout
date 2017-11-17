@@ -53,3 +53,9 @@
 .Coin-price-unchanged {
 	color: black;
 }
+
+/* 'sign' e.g. 'dollar sign' e.g. $ */
+.Coin-price-sign {
+	position: relative;
+	left: -4px;
+}
