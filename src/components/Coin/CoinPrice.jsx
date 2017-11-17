@@ -25,15 +25,23 @@ class CoinPrice extends Component {
 		const flags = parseInt(this.props.flags, 10);
 		const denomination = this.props.denomination;
 		const symbol = CoinPrice.SIGNS[denomination];
-
 		let pricePrecision = 0;
+
 		if(price) {
 			const decimalIndex = priceStr.indexOf('.');
 			pricePrecision = 'USD' !== denomination
 				? decimalIndex + priceStr.substr(decimalIndex).search(/[1-9]/) + this.props.precision -2
 				: 2;
 
-			console.log('priceStr: ' + priceStr + ' decimalIndex:' + decimalIndex + ' firstNonZero:' + priceStr.substr(decimalIndex).search(/[1-9]/) + ' precision:' + pricePrecision + ' result:' + parseFloat(price).toFixed(pricePrecision));
+			/*
+			console.log(
+				' priceStr: ' + priceStr + 
+				' decimalIndex:' + decimalIndex + 
+				' firstNonZero:' + priceStr.substr(decimalIndex).search(/[1-9]/) +
+				' precision:' + pricePrecision +
+				' result:' + parseFloat(price).toFixed(pricePrecision)
+			);
+			*/
 		}
 		
 		//console.log(priceStr + ' length: ' + priceStr.length + ' precision: ' + pricePrecision)

@@ -22,6 +22,7 @@ yarn-error.log*
 
 # CoinScout
 src/api/Bittrex/config.json
+src/config/coinscout.js
 
 # Sublime Text
 coinscout.sublime-*

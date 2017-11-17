@@ -39,7 +39,7 @@ class Coin extends Component {
 	}
 
 	render() {
-		console.log(this.props);
+		//console.log(this.props);
 
 		const {pricePrecision, ...props} = this.props;
 		const flags = this.state.FLAGS;
