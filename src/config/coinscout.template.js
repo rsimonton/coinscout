@@ -1,6 +1,6 @@
 /**
  * User configuration file for coins/tokens to track. Save a copy of this
- * file in this same directory as "coins.js" to start tracking coins.
+ * file in this same directory as "coinscout.js" to start tracking coins.
  */
 const config = {
 	//
