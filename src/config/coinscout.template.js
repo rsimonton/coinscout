@@ -45,10 +45,15 @@ const config = {
 	// at you, BitTrex).
 	//
 	//	{
-	//		'name': 'Bitcoin',
-	//		'symbol': 'BTC',
-	//		'exchange': 'Coinbase',
-	//		'market': 'USD'
+	//
+	//		name: 'Ethereum',
+	//		symbol': 'ETH',
+	//		exchange': 'Coinbase',
+	//		market': 'USD',
+	//		stack: {
+	//			// Where you hold coins, and how much you hold - used to calulate balance
+	//			Coinbase: 5
+	//		}
 	//	},
 	//
 	// Configuration options will be expanded in the future to support additional
@@ -72,6 +77,7 @@ const config = {
 	// Same format as portfolio config, with the intention that these are coins
 	// you're interested in but don't own. There will be enhancements around this
 	// in the future but for now these are treated identically to portfolio coins
+	// (but don't have a portfolio value, sinc you you don't own them ;)
 	watchlist: [
 		
 	]
