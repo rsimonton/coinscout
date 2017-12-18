@@ -8,7 +8,7 @@
 	font-family: 'Open Sans', sans-serif;
 	margin: 14px;
 	overflow: hidden;
-	padding: 12px 16px;
+	padding: 8px 12px;
 	width: 180px;
 }
 
@@ -19,28 +19,48 @@
 
 .Coin-label {
 	color: #777;
-	font-size: 24px;
 	font-weight: 500;
+	line-height: 32px;
+}
+
+.Coin-label.Coin-label-16 {
+	font-size: 20px;
+}
+
+.Coin-label.Coin-label-32 {
+	font-size: 22px;
 }
 
 .Coin-label .Coin-logo {
 	background-repeat: no-repeat;
 	background-position: center center;
 	display: inline-block;
+}
+
+.Coin-label.Coin-label-16 .Coin-logo {
+	height: 16px;
+	width: 16px;
+	border-radius: 8px;
+	margin-right: 6px;
+}
+
+.Coin-label.Coin-label-32 .Coin-logo {
 	height: 32px;
 	width: 32px;
 	border-radius: 16px;
 	margin-right: 8px;
 }
 
-.Coin-label .Coin-name {
+
+.Coin-label.Coin-label-32 .Coin-name {
 	position: relative;
 	top: -8px;
 }
 
 .Coin-price {
-	float: right;
+	/*float: right;*/
 	font-size: 22px;
+	text-align: right;
 }
 .Coin-price-decreasing {
 	color: red;
@@ -58,4 +78,18 @@
 .Coin-price-sign {
 	position: relative;
 	left: -4px;
+}
+
+.Coin-stack {
+	color: #888;
+	font-size: .85em	;
+	margin-top: 6px;
+}
+
+.Coin-stack-count {
+	float: left;
+}
+
+.Coin-stack-value {
+	float: right;
 }

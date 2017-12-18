@@ -11,7 +11,7 @@ class CoinLabel extends Component {
 			}
 
 		return (
-			<div className="Coin-label">
+			<div className={'Coin-label Coin-label-' + imageSize}>
 				<div className="Coin-logo" style={logoStyle} alt={this.props.name}></div>
 				<span className="Coin-name">{name}</span>
 			</div>

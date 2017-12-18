@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import Coin from './components/Coin/Coin.jsx';
+import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
 import { apiInit, apiFinalize } from './api/CryptoCompare/api.js';
 //import ApiManager from 'api/ApiManager.js';
 //import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
@@ -22,7 +23,16 @@ class App extends Component {
 		this.normalizeValues = appConfig.normalizeValues;
 		this.pricePrecision = appConfig.pricePrecision;
 		this.rawPrices = { USD: 1 };
-		this.userDenomination = 'USD';  // for now...		
+		this.userDenomination = 'USD';  // for now...
+
+		this.currencyFormatters = {
+			USD: new Intl.NumberFormat('en-US', {
+            	style: 'currency',
+            	currency: 'USD',
+            	minimumFractionDigits: 2,
+            	maximumFractionDigits: 2
+            })
+		}
 
 		this.state = {
 			prices: {},
@@ -55,6 +65,11 @@ class App extends Component {
 	}
 
 	handleData(data) {
+
+		if(Number.isNaN(data.PRICE)) {
+			return;
+		}
+		
 		const prices = this.state.prices;
 		let convertedPrice = {};
 
@@ -82,6 +97,7 @@ class App extends Component {
 				denomination={this.normalizeValues ? this.userDenomination : coin.market}
 				pricePrecision={coin.pricePrecision || appConfig.pricePrecision}
 				onData={this.handleData}
+				formatters={this.currencyFormatters}
 				{...coin} />
 		);
 
@@ -91,6 +107,7 @@ class App extends Component {
 				<div className="App-header">
 					<img src={logo} className="App-logo" alt="logo" />
 					<h2>Welcome to CoinScout</h2>
+					<PortfolioSummary prices={prices} formatters={this.currencyFormatters} />
 				</div>
 			
 				<div className="App-content">
