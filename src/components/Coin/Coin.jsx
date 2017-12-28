@@ -77,7 +77,25 @@ class Coin extends Component {
 	}
 
 	handleClick() {
-		window.open('https://coinmarketcap.com/currencies/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/');
+		
+		let link = false;
+
+		switch(this.props.coinInfoSite) {
+			case 'CoinMarketCap':
+				link = 'https://coinmarketcap.com/currencies/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
+				break;
+			case 'CryptoCompare':
+				link = 'https://cryptocompare.com/coins/' + this.props.symbol.toLowerCase() + '/markets/' + this.props.market;
+				break;
+			case 'LiveCoinWatch':
+				link = 'https://www.livecoinwatch.com/price/' + this.props.name.replace(/ /g, '') + '-' + this.props.symbol;
+				break;
+			default:
+				console.log('No "coinInfoSite" config item set, ignoring coin click');
+				break;
+		}
+
+		link && window.open(link);
 	}
 
 	handleData(data) {

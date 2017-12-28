@@ -1,0 +1,10 @@
+.Settings-panel {
+	background-color: #555;
+	display: none;
+}
+
+.Settings-panel.open {
+	height: 40px;
+	line-height: 40px;
+	vertical-align: middle;
+}

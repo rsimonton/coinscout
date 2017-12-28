@@ -2,11 +2,15 @@ import React, { Component } from 'react';
 
 import Coin from './components/Coin/Coin.jsx';
 import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
+import SettingsPanel from './components/Settings/SettingsPanel.jsx';
 import { apiInit, apiFinalize } from './api/CryptoCompare/api.js';
+
 //import ApiManager from 'api/ApiManager.js';
 //import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
 
-import appConfig from './config/coinscout.js';
+import appConfig from './config/config.js';
+import coinConfig from './config/coins.js';
+
 import logo from './logo.svg';
 
 import './App.css';
@@ -19,9 +23,12 @@ class App extends Component {
 		//this.apiManager = new ApiManager();
 		
 		// For now treat portfolio and watchlist the same
-		this.coinConfig = appConfig.portfolio.concat(appConfig.watchlist);			
+		this.coinConfig = coinConfig.portfolio.concat(coinConfig.watchlist);
+
 		this.normalizeValues = appConfig.normalizeValues;
 		this.pricePrecision = appConfig.pricePrecision;
+		this.coinInfoSite = appConfig.coinInfoSite;
+
 		this.rawPrices = { USD: 1 };
 		this.userDenomination = 'USD';  // for now...
 
@@ -93,6 +100,7 @@ class App extends Component {
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
 		const coinComponents = this.coinConfig.map((coin, index) =>
 			<Coin key={index}
+				coinInfoSite={this.coinInfoSite}
 				price={prices[coin.symbol]}
 				denomination={this.normalizeValues ? this.userDenomination : coin.market}
 				pricePrecision={coin.pricePrecision || appConfig.pricePrecision}
@@ -107,10 +115,11 @@ class App extends Component {
 				<div className="App-header">
 					<img src={logo} className="App-logo" alt="logo" />
 					<h2>Welcome to CoinScout</h2>
-					<PortfolioSummary prices={prices} formatters={this.currencyFormatters} />
 				</div>
-			
+
 				<div className="App-content">
+					<SettingsPanel />
+					<PortfolioSummary prices={prices} formatters={this.currencyFormatters} />
 					<div className="App-coins">
 						{coinComponents}
 					</div>

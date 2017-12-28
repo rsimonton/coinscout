@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import appConfig from './../../config/coinscout.js';
+import coinConfig from './../../config/coins.js';
 import './PortfolioSummary.css';
 
 export default class PortfolioSummary extends Component {
@@ -14,7 +14,7 @@ export default class PortfolioSummary extends Component {
 		const coinPrices = this.props.prices;
 
 		// Behold the mighty power of Array.reduce!
-		const portfolioValue = appConfig.portfolio.reduce((total, coin) => {
+		const portfolioValue = coinConfig.portfolio.reduce((total, coin) => {
 			const coinCount = Object.values(coin.stack).reduce((total, count) => total + count);
 			return total + (coinCount * coinPrices[coin.symbol]);
 		}, 0);	// This zero specifies an initial value which is req'd when reducing arrays of objects

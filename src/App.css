@@ -3,34 +3,48 @@
 }
 
 .App-content {
-  padding: 14px;
+  padding: 0;
 }
 
 .App-logo {
   animation: App-logo-spin infinite 20s linear;
   height: 80px;
+  float: left;
 }
 
 .App-header,
 .App-footer {
   background-color: #222;
-  padding: 20px;
   color: white;
-  text-align: center;
 }
 
 .App-header {
-  height: 150px;  
+  height: 80px;
+  line-height: 80px;
+  vertical-align: middle;
+}
+
+.App-header h2 {
+  margin: 0;
+}
+
+.App-coins {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0 14px;
 }
 
 .App-footer {
   color: #777;
   font-size: 12px;
-  height: 24px;
+  height: 44px;
+  line-height: 44px;
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .App-intro {
