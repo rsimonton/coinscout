@@ -43,5 +43,7 @@ export default {
 	// Note that not all sites list all markets for every coin, or even list
 	// every coin.
 	//
-	coinInfoSite: 'CoinMarketCap'
+	marketCapSite: 'LiveCoinWatch',
+	showBalances: true,
+	showWatchList: true
 };

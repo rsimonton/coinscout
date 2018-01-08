@@ -80,7 +80,7 @@ class Coin extends Component {
 		
 		let link = false;
 
-		switch(this.props.coinInfoSite) {
+		switch(this.props.marketCapSite) {
 			case 'CoinMarketCap':
 				link = 'https://coinmarketcap.com/currencies/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
 				break;
@@ -91,7 +91,7 @@ class Coin extends Component {
 				link = 'https://www.livecoinwatch.com/price/' + this.props.name.replace(/ /g, '') + '-' + this.props.symbol;
 				break;
 			default:
-				console.log('No "coinInfoSite" config item set, ignoring coin click');
+				console.log('No "marketCapSite" config item set, ignoring coin click');
 				break;
 		}
 

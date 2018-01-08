@@ -1,10 +1,39 @@
 .Settings-panel {
 	background-color: #555;
-	display: none;
+	height: 39px;
+	line-height: 36px;
+	margin-top: -39px;
+	padding: 0 12px;
+	transition: margin-top .4s;
+	vertical-align: middle;
+	z-index: 0; /* Less than header */
 }
 
 .Settings-panel.open {
-	height: 40px;
-	line-height: 40px;
-	vertical-align: middle;
+	margin-top: 0;	
+}
+
+.Settings-panel .Setting {
+	display: inline-block;
+	margin-right: 38px;
+}
+
+.Settings-panel .Setting label {
+	color: #bbb;
+	font-size: 13px;
+	font-weight: normal;
+}
+
+.Settings-panel .Setting input,
+.Settings-panel .Setting select {
+	position: relative;
+}
+
+.Settings-panel .Setting input {
+	margin-right: 6px;
+	top: -1px;
+}
+
+.Settings-panel .Setting select {
+	top: 0;
 }

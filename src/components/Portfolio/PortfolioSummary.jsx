@@ -11,7 +11,8 @@ export default class PortfolioSummary extends Component {
 	}
 
 	render() {
-		const coinPrices = this.props.prices;
+		const coinPrices = this.props.prices,
+			  showBalances = this.props.showBalances;
 
 		// Behold the mighty power of Array.reduce!
 		const portfolioValue = coinConfig.portfolio.reduce((total, coin) => {
@@ -22,7 +23,7 @@ export default class PortfolioSummary extends Component {
 		const valueFormatted = this.formatter.format(portfolioValue);
 
 		return (
-			<div className="Portfolio-summary">
+			<div className={"Portfolio-summary " + (showBalances ? '' : 'hidden')}>
 				<span className="Portoflio-value">
 					<label>Portfolio Value:</label>&nbsp;<span>{valueFormatted}</span>
 				</span>

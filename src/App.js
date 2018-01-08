@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import Coin from './components/Coin/Coin.jsx';
+import Coins from './components/Coins/Coins.jsx';
 import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
 import SettingsPanel from './components/Settings/SettingsPanel.jsx';
 import { apiInit, apiFinalize } from './api/CryptoCompare/api.js';
@@ -20,18 +21,17 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 
+		const cache = window.localStorage;
+		let cachedSettings = {};
+
 		//this.apiManager = new ApiManager();
 		
-		// For now treat portfolio and watchlist the same
-		this.coinConfig = coinConfig.portfolio.concat(coinConfig.watchlist);
-
 		this.normalizeValues = appConfig.normalizeValues;
 		this.pricePrecision = appConfig.pricePrecision;
-		this.coinInfoSite = appConfig.coinInfoSite;
-
 		this.rawPrices = { USD: 1 };
 		this.userDenomination = 'USD';  // for now...
 
+		// Set up formatters for currencies we want to display
 		this.currencyFormatters = {
 			USD: new Intl.NumberFormat('en-US', {
             	style: 'currency',
@@ -41,23 +41,33 @@ class App extends Component {
             })
 		}
 
+		// Load saved users settings if any from window.localStorage
+		Object.keys(cache).forEach(setting => cachedSettings[setting] = JSON.parse(cache[setting]));
+
+		// Initialize state, extending default settings w/ cached user settings
 		this.state = {
+			coinConfig: coinConfig,
 			prices: {},
-			signs: {}
+			signs: {},
+			settings: Object.assign(appConfig, cachedSettings)
 		};
 
+		// Bind handlers
 		this.handleData = this.handleData.bind(this);
-		
+		this.handleSettingsChange = this.handleSettingsChange.bind(this);
+
 		apiInit();
 	}
 
+	
 	componentDidMount() {
+
 		apiFinalize();
 
 		/* A succesful experiment - reorder Coin elements iu UI based on symbol after 3 seconds -- cool!
 		let self = this;
 		window.setTimeout(function() {
-			coinConfig.sort(function(a,b) {
+			coinConfig.portfolio.sort(function(a,b) {
 				return a.symbol < b.symbol ? -1 : (a.symbol === b.symbol ? 0 : 1);
 			});
 
@@ -66,14 +76,16 @@ class App extends Component {
 		*/
 	}
 
+	
 	convertPrice(price, from, to) {
 		//console.dir(arguments);
 		return price * this.rawPrices[from] / this.rawPrices[to];
 	}
 
+	
 	handleData(data) {
 
-		if(Number.isNaN(data.PRICE)) {
+		if(typeof data.PRICE === 'undefined' || Number.isNaN(data.PRICE)) {
 			return;
 		}
 		
@@ -92,20 +104,39 @@ class App extends Component {
 		this.setState(Object.assign(prices, convertedPrice));
 	}
 
-	render() {
 
-		//const userPrefs = <UserPrefs convertValues="USD" />;
-		const prices = this.state.prices;
+	/**
+	 * @param setting Key/value of setting and it's new value
+	 */
+	handleSettingsChange(setting) {
+		// Cache user setting
+		const key = Object.keys(setting)[0]
+		const val = Object.values(setting)[0];
+		window.localStorage.setItem(key, JSON.stringify(val));
+		this.setState(Object.assign(this.state.settings, setting));
+	}
+
+
+	render() {
+		
+		const coinConfig = this.state.coinConfig,
+			  prices = this.state.prices,
+			  settings = this.state.settings;
+
+		const coinsToDisplay = settings.showWatchList === false
+			? coinConfig.portfolio
+			: coinConfig.portfolio.concat(coinConfig.watchlist);
 
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
-		const coinComponents = this.coinConfig.map((coin, index) =>
+		const coinComponents = coinsToDisplay.map((coin, index) =>
 			<Coin key={index}
-				coinInfoSite={this.coinInfoSite}
+				marketCapSite={settings.marketCapSite}
 				price={prices[coin.symbol]}
 				denomination={this.normalizeValues ? this.userDenomination : coin.market}
 				pricePrecision={coin.pricePrecision || appConfig.pricePrecision}
 				onData={this.handleData}
 				formatters={this.currencyFormatters}
+				showBalances={settings.showBalances}
 				{...coin} />
 		);
 
@@ -115,14 +146,16 @@ class App extends Component {
 				<div className="App-header">
 					<img src={logo} className="App-logo" alt="logo" />
 					<h2>Welcome to CoinScout</h2>
+					<PortfolioSummary
+						prices={prices}
+						formatters={this.currencyFormatters}
+						showBalances={settings.showBalances} />					
 				</div>
 
+				<SettingsPanel settings={settings} onChange={this.handleSettingsChange} />
+				
 				<div className="App-content">
-					<SettingsPanel />
-					<PortfolioSummary prices={prices} formatters={this.currencyFormatters} />
-					<div className="App-coins">
-						{coinComponents}
-					</div>
+					<Coins coins={coinComponents} />
 				</div>
 			
 				<div className="App-footer">

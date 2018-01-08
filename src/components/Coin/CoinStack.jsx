@@ -51,9 +51,10 @@ class CoinStack extends Component {
 		const symbol = this.state.symbol;
 		const sign = this.state.sign;
 		const value = this.state.value;
+		const showBalances = this.props.showBalances;
 
 		return (
-			<div className={'Coin-stack' + (count === 0 ? ' hidden' : '')}>
+			<div className={'Coin-stack' + ((count === 0 || !showBalances) ? ' hidden' : '')}>
 				<span className='Coin-stack-count'>{count} {symbol}</span>
 				<span className='Coin-stack-value'>{sign}{value}</span>
 			</div>
