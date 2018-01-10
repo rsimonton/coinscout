@@ -51,7 +51,7 @@ export default {
 	// Same format as portfolio config, with the intention that these are coins
 	// you're interested in but don't own. There will be enhancements around this
 	// in the future but for now these are treated identically to portfolio coins
-	// (but don't have a portfolio value, sinc you you don't own them ;)
+	// (but don't have a portfolio value, since you you don't own them ;)
 	//
 	watchlist: [
 		

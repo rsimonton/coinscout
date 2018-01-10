@@ -2,15 +2,15 @@
 	background-color: #555;
 	height: 39px;
 	line-height: 36px;
-	margin-top: -39px;
+	margin-bottom: -39px;
 	padding: 0 12px;
-	transition: margin-top .4s;
+	transition: margin-bottom .4s;
 	vertical-align: middle;
-	z-index: 0; /* Less than header */
+	z-index: 1; /* Less than App-content */
 }
 
 .Settings-panel.open {
-	margin-top: 0;	
+	margin-bottom: 0;	
 }
 
 .Settings-panel .Setting {

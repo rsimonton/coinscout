@@ -52,9 +52,12 @@ class App extends Component {
 			settings: Object.assign(appConfig, cachedSettings)
 		};
 
+		this.state.settingsOpen = !!this.state.settings.settingsOpen;
+
 		// Bind handlers
 		this.handleData = this.handleData.bind(this);
 		this.handleSettingsChange = this.handleSettingsChange.bind(this);
+		this.toggleSettings = this.toggleSettings.bind(this);
 
 		apiInit();
 	}
@@ -117,11 +120,21 @@ class App extends Component {
 	}
 
 
+	toggleSettings() {
+		const isOpen = this.state.settingsOpen,
+			  nextState = !isOpen;
+
+		this.setState({settingsOpen: nextState});
+		window.localStorage.setItem('settingsOpen', JSON.stringify(nextState));
+	}
+
+
 	render() {
 		
 		const coinConfig = this.state.coinConfig,
 			  prices = this.state.prices,
-			  settings = this.state.settings;
+			  settings = this.state.settings,
+			  settingsOpen = this.state.settingsOpen;
 
 		const coinsToDisplay = settings.showWatchList === false
 			? coinConfig.portfolio
@@ -144,7 +157,7 @@ class App extends Component {
 			<div className="App">
 
 				<div className="App-header">
-					<img src={logo} className="App-logo" alt="logo" />
+					<img src={logo} className="App-logo" alt="logo" onClick={this.toggleSettings} />
 					<h2>Welcome to CoinScout</h2>
 					<PortfolioSummary
 						prices={prices}
@@ -152,7 +165,7 @@ class App extends Component {
 						showBalances={settings.showBalances} />					
 				</div>
 
-				<SettingsPanel settings={settings} onChange={this.handleSettingsChange} />
+				<SettingsPanel settings={settings} onChange={this.handleSettingsChange} isOpen={settingsOpen} />
 				
 				<div className="App-content">
 					<Coins coins={coinComponents} />

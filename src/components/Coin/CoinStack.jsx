@@ -27,17 +27,21 @@ class CoinStack extends Component {
 		const precision = 2;
 		const sign = '$';
 
-		let count = 0;
+		// Max stack decimals for non-whole integer stack counts
+		const stackDecimals = 3;
 
-		Object.keys(stack).forEach((exchange) => count += stack[exchange]);
+		let count = 0, stackSize;
 
-		const value = parseFloat(count * price).toFixed(precision);
+		Object.keys(stack).forEach((exchange) => {
+			stackSize = stack[exchange];
+			count += parseFloat(stackSize === Math.floor(stackSize) ? stackSize : stackSize.toFixed(stackDecimals));
+		});
 
 		this.setState({
 			count: count,
 			symbol: symbol,
 			sign: sign,
-			value: value
+			value: parseFloat(count * price).toFixed(precision)
 		}, () => nextProps.onValueChange && nextProps.onValueChange(this.state.value));
 	}
 

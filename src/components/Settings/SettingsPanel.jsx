@@ -36,7 +36,7 @@ class SettingsPanel extends Component {
 			  showBalances = this.state.showBalances;
 
 		return (
-			<div className={'Settings-panel open'}>
+			<div className={'Settings-panel' + (this.props.isOpen ? ' open' : '')}>
 				
 				<div className="Setting">
 					<label>Market Cap Site:&nbsp;
