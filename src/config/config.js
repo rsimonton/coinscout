@@ -3,6 +3,10 @@
  */
 export default {
 	//
+	// Turn debug (console) logging on/off
+	//
+	debug: true,
+	//
 	// Set to true convert the coin sign/value to USD, false to display
 	// the target market sign/value.  For this to work properly in an
 	// arbitrary case, the 'market' symbol of a given coin must have a

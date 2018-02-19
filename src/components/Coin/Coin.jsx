@@ -17,23 +17,30 @@ class Coin extends Component {
 		this.symbol = this.props.symbol;	// need a permanent reference
 
 		this.priceChangeLast = CoinPrice.changeTypes[CoinPrice.UNCHANGED];		
-		this.state = {weight: 0};
+		this.state = {
+			invalid: true,
+			weight: 0
+		};
 
 		this.handleClick = this.handleClick.bind(this);
 		this.handleData = this.handleData.bind(this);
-		this.handleStackValueChange = this.handleStackValueChange.bind(this);
+		this.handleStackValueChange = this.handleStackValueChange.bind(this);		
+	}
 
-		apiSubscribe(
+	componentDidMount() {
+		const subscribed = apiSubscribe(
 			this.props.exchange,
 			this.props.symbol,
 			this.props.market,
 			this.handleData
 		);
+
+		this.setState({invalid: !subscribed});
 	}
 
 	componentWillReceiveProps(nextProps) {
 
-		const priceRaw = nextProps.price;
+		const priceRaw = parseFloat(nextProps.price);
 
 		if(Number.isNaN(priceRaw)) {
 			return;
@@ -45,18 +52,19 @@ class Coin extends Component {
 		const precisionRaw = nextProps.pricePrecision;
 		
 		let pricePrecision = 0;
+
 		if(priceRaw) {
 			const decimalIndex = priceStr.indexOf('.');
 			pricePrecision = 'USD' !== denomination
 				? decimalIndex + priceStr.substr(decimalIndex).search(/[1-9]/) + precisionRaw - 2
-				: 2;
+				: priceRaw < 1 ? 3 : 2;
 		}
 
-		//console.log(priceStr + ' length: ' + priceStr.length + ' precision: ' + pricePrecision)
+		//console.log('riceStr + ' length: ' + priceStr.length + ' precision: ' + pricePrecision)
 		const priceNormalized = parseFloat(priceRaw).toFixed(pricePrecision);
 
 		// Did the price go up/down or unchanged?
-		const unchanged = priceNormalized == this.state.price;
+		const unchanged = priceNormalized === parseFloat(this.state.price).toFixed(pricePrecision);
 		const priceChangeThis = unchanged
 			? this.state.priceChange
 			: CoinPrice.changeTypes[flags];
@@ -73,7 +81,7 @@ class Coin extends Component {
 			price: priceNormalized,
 			priceChange: priceChangeThis,
 			weight: newWeight});
-		//}, () => console.log(nextProps.symbol + ': ' + newWeight));		
+		//}, () => console.log('extProps.symbol + ': ' + newWeight));		
 	}
 
 	handleClick() {
@@ -117,15 +125,17 @@ class Coin extends Component {
 	}
 
 	render() {
-		//console.log(this.props);
+		//console.log('his.props);
 
 		const {denomination, pricePrecision, stack, ...props} = this.props;
+		const invalid = this.state.invalid;
 		const priceChange = this.state.priceChange;
 		const price = this.state.price;
 		const weight = this.state.weight;
+		const className = 'Coin Coin-' + this.symbol + (invalid ? ' Coin-invalid' : '');
 
 		return (
-			<div className={'Coin Coin-' + this.symbol} data-weight={weight} onClick={this.handleClick}>
+			<div className={className} data-weight={weight} onClick={this.handleClick}>
 				<CoinLabel name={this.name} label={this.label} />
 				<CoinPrice
 					change={priceChange}
@@ -135,7 +145,7 @@ class Coin extends Component {
 					onValueChange={this.handleStackValueChange}
 					symbol={this.symbol}
 					price={price}
-					stack={stack || {}} 
+					stack={stack} 
 					{...props} />				
 			</div>
 		);

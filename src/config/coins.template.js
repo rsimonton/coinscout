@@ -31,9 +31,15 @@
  */
 export default {
 	//
-	// Coins you own
+	// Public ERC20 wallet addresses when you hold ETH/tokens
 	//
 	portfolio: [
+
+	],
+	//
+	// Coins you hold on exchanges
+	//
+	exchanges: [
 		{
 			'name': 'Bitcoin',
 			'symbol': 'BTC',

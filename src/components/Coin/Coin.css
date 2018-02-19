@@ -17,6 +17,10 @@
 	box-shadow: 2px 3px 3px #ccc;
 }
 
+.Coin.Coin-invalid {
+	border: solid 1px red;
+}
+
 .Coin-label {
 	color: #777;
 	font-weight: 500;
@@ -82,12 +86,12 @@
 
 .Coin-stack {
 	color: #888;
-	font-size: .85em	;
+	font-size: .85em;
 	margin-top: 6px;
 }
 
-.Coin-stack-count {
-	float: left;
+.Coin-stack-count:last-child {
+	float: right;
 }
 
 .Coin-stack-value {

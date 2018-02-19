@@ -2,83 +2,127 @@ import io from 'socket.io-client';
 import CCC from './vendor.js';
 
 
-const DEBUG = true;
 const API_ENDPOINT = 'https://www.cryptocompare.com/api/data/';
+const API_ENDPOINT_CORS = 'https://min-api.cryptocompare.com/data/';
 const STREAMING_ENDPOINT = 'wss://streamer.cryptocompare.com';
-const QUOTE_TYPE = CCC.STATIC.TYPE.CURRENT;
+const QUOTE_TYPE = CCC.STATIC.TYPE.CURRENTAGG;
+const COIN_ID_KEY = 'cryptoCompare.coindIds';
 
 let ws,
+	coinIds = window.localStorage[COIN_ID_KEY],
 	initialized = false,
 	subscriptions = {};
 
 
-
-function apiInit() {
+function apiInit(callback) {
 	//
 	// Fetch general info for all coins
 	//
-	fetch(API_ENDPOINT + 'coinlist/', {'mode': 'no-cors'})
-		.then(function(response) {
-			//console.dir(response);
-		})
-		.catch(function(err) {
-			throw Error('api.js -- failed to load coin infos: ' + err);
-		});
-
 	//
-	// Init websocket
+	// Fetch general info for all coins
 	//
-	ws = io(STREAMING_ENDPOINT);
+	if(coinIds) {
+		coinIds = JSON.parse(coinIds);
+		initWebsocket(callback);
+	}
+	else {
+		coinIds = {};
 
-	ws.on('connect', function(){
-		DEBUG && console.log('Connected!')
-	});
+		// Not present in localStorage, fetch
+		fetch(API_ENDPOINT_CORS + 'all/coinlist')
+			.then(response => response.json())
+			.then(json => {
+				// Map symbol to CryptoCompare internal ID
+				Object.keys(json.Data).forEach(symbol => coinIds[symbol] = json.Data[symbol].Id);
+				window.localStorage[COIN_ID_KEY] = JSON.stringify(coinIds);
 
-	ws.on('event', function(data){
-		DEBUG && console.log('Received event:');
-		DEBUG && console.dir(data);
-	});
-
-	ws.on('disconnect', function(){
-		DEBUG && console.log('Disconnected :(');
-	});
-
-	initialized = true;
+				initWebsocket(callback);
+			})
+			.catch(function(err) {
+				throw Error('api.js -- failed to load coin infos: ' + err);
+			});
+	}
 }
 
 
-function apiSubscribe(exchange, symbol, to, callback) {
+function apiSubscribe(exchange, symbol, market, callback) {
 	
 	if(!initialized) {
 		throw new Error('api.js -- you must call apiInit before adding subscriptions');
 	}
 
+	const coinId = coinIds[symbol];
+
+	if(!coinId) {
+		console.error('No coin ID found for symbol: ' + symbol);
+		return false;
+	}
+
+	//getTokenInfo(symbol);
+	/*
 	// If we're asking for aggregate data, override the exchange with the special
 	// one that the API authors provide for that quote type
 	QUOTE_TYPE === CCC.STATIC.TYPE.CURRENTAGG && (exchange = 'CCCAGG');
-	QUOTE_TYPE === CCC.STATIC.TYPE.CURRENTAGG && (to = 'USD');
+	QUOTE_TYPE === CCC.STATIC.TYPE.CURRENTAGG && (market = 'USD');
 
 	let subKey = [
 		QUOTE_TYPE,
 		exchange,
 		symbol,
-		to
+		market
 	].join('~');
+	*/
+	fetch(API_ENDPOINT_CORS + 'subsWatchlist?fsyms=' + symbol + '&tsym=USD')
+		.then(res => res.json())
+		.then(json => {
+			json[symbol].RAW.forEach(sub => {
+				const subKey = CCC.CURRENT.getKeyFromStreamerData(sub);
+				console.log('Adding coin subscription: ' + subKey);
+				// Store reference to subscription-specific callback
+				subscriptions[subKey] = callback;
 
-	console.log('Adding coin subscription: ' + subKey);
+				ws.emit('SubAdd', {
+					subs: Object.keys(subscriptions)
+				});
+			});
+		});
 
-	// Store reference to subscription-specific callback
-	subscriptions[subKey] = callback;
+	// Indicate success
+	return true;
 }
 
 
-function apiFinalize() {
-
-	// Subscribe all coins
-	ws.emit('SubAdd', {
-		subs: Object.keys(subscriptions)
-	});
+function getTokenInfo(symbol) {
 	
+	const coinId = coinIds[symbol];
+
+	if(!coinId) {
+		console.error('No coin ID found for symbol: ' + symbol);
+		return;
+	}
+
+	fetch(API_ENDPOINT + 'coinsnapshotfullbyid/?id' + coinId)
+		.then(response => response.json())
+		.then(json => { console.log(json) });
+}
+
+function initWebsocket(callback) {
+	
+	ws = io(STREAMING_ENDPOINT);
+
+	ws.on('connect', function(){
+		console.log('Connected!')
+	});
+
+	ws.on('event', function(data){
+		console.log('Received event:');
+		console.dir(data);
+	});
+
+	ws.on('disconnect', function(){
+		console.log('Disconnected :(');
+	});
+
 	// Listen for data
 	ws.on('m', data => {
 		// Decode message using crypto compare's util function
@@ -89,7 +133,10 @@ function apiFinalize() {
 			subscriptions[subKey](CCC.CURRENT.unpack(data));
 		}
 	});
+
+	initialized = true;
+
+	callback && callback();
 }
 
-
-export { apiInit, apiSubscribe, apiFinalize };
+export { apiInit, apiSubscribe, getTokenInfo };

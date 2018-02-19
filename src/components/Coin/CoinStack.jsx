@@ -7,10 +7,6 @@ class CoinStack extends Component {
 		this.state = {};
 	}
 	
-	componentDidUpdate() {
-
-	}
-
 	componentWillReceiveProps(nextProps) {
 		// I'm being lazy here - price sometimes comes in as NaN and I haven't
 		// been able to trace it back to its source. And it's late. So here's 
@@ -21,7 +17,8 @@ class CoinStack extends Component {
 
 		const symbol = nextProps.symbol;
 		const price = nextProps.price;
-		const stack = nextProps.stack;
+		const stack = nextProps.stack || [];
+		const breakdown = {};
 		
 		// Prices always USD for now
 		const precision = 2;
@@ -29,16 +26,39 @@ class CoinStack extends Component {
 
 		// Max stack decimals for non-whole integer stack counts
 		const stackDecimals = 3;
+		// Number of digits total to display for coin total
+		const digits = 5;
 
-		let count = 0, stackSize;
+		let count = 0, balanceFormatted;
 
-		Object.keys(stack).forEach((exchange) => {
-			stackSize = stack[exchange];
-			count += parseFloat(stackSize === Math.floor(stackSize) ? stackSize : stackSize.toFixed(stackDecimals));
-		});
+		// Sort by balance, decreasing
+		if(stack) {
+			stack.sort((a, b) => a.balance < b.balance ? 1 : (a.balance === b.balance ? 0 : -1));
+
+			stack.forEach(entry => {
+				balanceFormatted = entry.balance === Math.floor(entry.balance)
+					? entry.balance
+					: entry.balance.toFixed(stackDecimals);
+
+				// Source total, formatted
+				breakdown[entry.source] = balanceFormatted;
+				// Cummulative total
+				count += parseFloat(entry.balance);
+			});
+		}
+
+		// Determine how many decimal places we should display based on the 'digits'
+		// const. If digits === 5, coin totals will display 5 digits, e.g.:
+		//
+		//	12487
+		//	432.56
+		//  0.0002
+		//
+		const countDecimals = Math.max(0, digits - String(Math.floor(count)).length);
 
 		this.setState({
-			count: count,
+			breakdown: breakdown,
+			count: count === Math.floor(count) ? count : count.toFixed(countDecimals),
 			symbol: symbol,
 			sign: sign,
 			value: parseFloat(count * price).toFixed(precision)
@@ -50,17 +70,28 @@ class CoinStack extends Component {
 		console.log('CoinStack props:');
 		console.dir(this.props);
 		*/
-
+		const breakdown = this.state.breakdown;
 		const count = this.state.count;
 		const symbol = this.state.symbol;
 		const sign = this.state.sign;
 		const value = this.state.value;
-		const showBalances = this.props.showBalances;
+
+		// We overload the show/hide stack/balance setting - if 'count' is zero, hide them
+		const showBalances = this.props.settings.showBalances && count > 0;
+		const showStack = this.props.settings.showStack && count > 0;
+
+		// Build tooltip based on breakdown - the number of coins held in each
+		// account (e.g. exchange or wallet)
+		const tooltip = breakdown
+			? Object.keys(breakdown).reduce((tooltip, account) => {
+					return tooltip + '\n' + account + ': ' + breakdown[account];
+				}, '')
+			: 'Loading...';
 
 		return (
-			<div className={'Coin-stack' + ((count === 0 || !showBalances) ? ' hidden' : '')}>
-				<span className='Coin-stack-count'>{count} {symbol}</span>
-				<span className='Coin-stack-value'>{sign}{value}</span>
+			<div className={'Coin-stack'}>
+				{showStack && <span className='Coin-stack-count' title={tooltip}>{count} {symbol}</span>}
+				{showBalances && <span className='Coin-stack-value'>{sign}{value}</span>}
 			</div>
 		);
 	}

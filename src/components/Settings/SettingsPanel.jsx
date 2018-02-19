@@ -33,7 +33,8 @@ class SettingsPanel extends Component {
 
 		const marketCapSite = this.state.marketCapSite,
 			  showWatchList = this.state.showWatchList,
-			  showBalances = this.state.showBalances;
+			  showBalances = this.state.showBalances,
+			  showStack = this.state.showStack;
 
 		return (
 			<div className={'Settings-panel' + (this.props.isOpen ? ' open' : '')}>
@@ -56,10 +57,10 @@ class SettingsPanel extends Component {
 					<label>
 						<input
 							type="checkbox"
-							data-setting="showWatchList"
-							defaultChecked={showWatchList}
+							data-setting="showStack"
+							defaultChecked={showStack}
 							onChange={this.handleChange} />
-						Show Watch List
+						Show Stack
 					</label>
 				</div>
 
@@ -74,6 +75,17 @@ class SettingsPanel extends Component {
 					</label>
 				</div>
 
+				<div className="Setting">
+					<label>
+						<input
+							type="checkbox"
+							data-setting="showWatchList"
+							defaultChecked={showWatchList}
+							onChange={this.handleChange} />
+						Show Watch List
+					</label>
+				</div>
+				
 			</div>
 		);
 	}

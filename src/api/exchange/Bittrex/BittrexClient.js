@@ -15,7 +15,7 @@ class BittrexClient {
 		let nonce = new Date().getTime();
 		let uri = config.uri + 'getticker?market=BTC-LTC&apikey=' + config.key + '&nonce=' + nonce;
 
-		console.log(uri);
+		console.log('ri);
 
 		let hash = CryptoJS.HmacSHA512(uri, config.secret);
 
@@ -32,7 +32,7 @@ class BittrexClient {
 		// First look 
 		/*
 		api.getbalances( function( data, err ) {
-  			console.log( data );
+  			console.log('data );
 		});
 		*/
 	}

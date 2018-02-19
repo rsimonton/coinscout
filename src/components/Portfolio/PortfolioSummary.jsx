@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 
-import coinConfig from './../../config/coins.js';
 import './PortfolioSummary.css';
 
 export default class PortfolioSummary extends Component {
@@ -11,14 +10,16 @@ export default class PortfolioSummary extends Component {
 	}
 
 	render() {
-		const coinPrices = this.props.prices,
+		const coins = this.props.coins,
+			  coinPrices = this.props.prices,
 			  showBalances = this.props.showBalances;
 
 		// Behold the mighty power of Array.reduce!
-		const portfolioValue = coinConfig.portfolio.reduce((total, coin) => {
-			const coinCount = Object.values(coin.stack).reduce((total, count) => total + count);
+		const portfolioValue = Object.keys(coins).reduce((total, symbol) => {
+			let coin = coins[symbol];
+			const coinCount = coin.stack.reduce((stack, source) => stack + source.balance, 0);
 			return total + (coinCount * coinPrices[coin.symbol]);
-		}, 0);	// This zero specifies an initial value which is req'd when reducing arrays of objects
+		}, 0);
 
 		const valueFormatted = this.formatter.format(portfolioValue);
 
