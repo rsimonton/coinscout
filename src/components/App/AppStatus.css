@@ -1,0 +1,28 @@
+.App-status {
+	background-color: #444;
+	border-radius: 10px;
+	color: #ccc;
+	float:right;
+	font-size: 11px;
+	padding:4px 8px;
+}
+
+.App-status .indicator {
+	border-radius: 4px;
+	display: inline-block;
+	height: 8px;
+	margin-right: 6px;
+	width: 8px;
+}
+
+.App-status.connected .indicator {
+	background-color: limegreen;
+}
+
+.App-status.disconnected .indicator {
+	background-color: red;
+}
+
+.App-status.connecting .indicator {
+	background-color: yellow;
+}

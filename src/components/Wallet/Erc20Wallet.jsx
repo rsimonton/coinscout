@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { getWalletInfo } from 'api/Ethplorer/api.js';
+import { getTokenInfo } from 'api/CryptoCompare/api.js';
 
 export default class Erc20Wallet extends Component {
 
@@ -18,11 +19,12 @@ export default class Erc20Wallet extends Component {
 		getWalletInfo(this.props.address, this.handleWalletLoaded);
 	}
 
-	addToken(name, symbol, stack) {
+	addToken(name, symbol, icon, stack) {
 		let data = {
 			address: this.props.address,
-			name: name.replace(/Token$/,'').replace(/ .*/,''),
-			symbol: symbol, 
+			name: name.replace(/Network Token$/,''),
+			symbol: symbol,
+			icon: icon,
 			market: 'USD',
 			stack: [{
 				source: this.props.address,
@@ -34,17 +36,23 @@ export default class Erc20Wallet extends Component {
 	}
 
 	getTokens() {
-		// { name: 'Bitcoin', symbol: 'BTC', exchange: 'Coinbase', market: 'USD', stack: { Coinbase: 0 } },
 		return this.tokens;
 	}
 
 	handleWalletLoaded(walletInfo) {
 
-		let token;
+		let token, tokenInfo;
 
 		// API breaks out ETH, treating it differently that ERC20 tokens
-		walletInfo.ETH && walletInfo.ETH.balance
-			&& this.addToken('Ethereum', 'ETH', walletInfo.ETH.balance);
+		if(walletInfo.ETH && walletInfo.ETH.balance) {
+			tokenInfo = getTokenInfo('ETH');
+			this.addToken(
+				tokenInfo.CoinName,
+				'ETH',
+				tokenInfo.ImageUrl,
+				walletInfo.ETH.balance
+			);
+		}
 
 		walletInfo.tokens && walletInfo.tokens.forEach(data => {
 
@@ -54,13 +62,15 @@ export default class Erc20Wallet extends Component {
 		
 			if(!(token.name && token.symbol && data.balance)) {
 				console.warn('Ignoring incomplete token data');
-				//console.dir(token);
 				return; // 'continue' equiv
 			}
 
-			this.addToken(
-				token.name,
+			tokenInfo = getTokenInfo(token.symbol);
+
+			tokenInfo && this.addToken(
+				tokenInfo.CoinName,
 				token.symbol,
+				tokenInfo.ImageUrl,
 				data.balance * Math.pow(10, -token.decimals)				
 			);
 		});

@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 
+import AppStatus from './components/App/AppStatus';
 import Coin from './components/Coin/Coin.jsx';
 import Coins from './components/Coins/Coins.jsx';
 import Erc20Wallet from './components/Wallet/Erc20Wallet.jsx';
 import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
 import SettingsPanel from './components/Settings/SettingsPanel.jsx';
-//import { apiInit, apiFinalize } from './api/CryptoCompare/api.js';
+import { addApiStatusListener, getApiStatus, getTokenInfo } from './api/CryptoCompare/api.js';
 
 //import ApiManager from 'api/ApiManager.js';
 //import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
@@ -52,22 +53,35 @@ class App extends Component {
 		coinConfig.portfolio.forEach(coin => {
 			// Restructuring coin.stack here - consider doing this in config itself.
 			// e.g. { BitTrex: 30 } ---> [ { source:BitTrex, balance: 30} ]
-			let stack = [];
+			const tokenInfo = getTokenInfo(coin.symbol);
 
-			Object.keys(coin.stack).forEach(source => {
-				stack.push({
-					source: source,
-					balance: coin.stack[source]
+			if(tokenInfo) {
+				let stack = [];
+
+				Object.keys(coin.stack).forEach(source => {
+					stack.push({
+						source: source,
+						balance: coin.stack[source]
+					});
 				});
-			});
 
-			coin.stack = stack;
+				coin.stack = stack;
 
-			coins[coin.symbol] = coin;
+				coins[coin.symbol] = {
+					name: tokenInfo.CoinName,
+					symbol: coin.symbol,
+					icon: tokenInfo.ImageUrl,
+					stack: stack
+				};
+			}
+			else {
+				console.warn('Ignoring unkown token in app config file: ' + coin.symbol);
+			}
 		});
 
 		// Initialize state, extending default settings w/ cached user settings
 		this.state = {
+			apiStatus: getApiStatus(),
 			coins: coins,
 			prices: {},
 			signs: {},
@@ -77,10 +91,11 @@ class App extends Component {
 		// Bind handlers
 		this.handleData = this.handleData.bind(this);
 		this.handleSettingsChange = this.handleSettingsChange.bind(this);
+		this.handleStatusChange = this.handleStatusChange.bind(this);
 		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
 		this.toggleSettings = this.toggleSettings.bind(this);
 
-		//apiInit();
+		addApiStatusListener(this.handleStatusChange);
 	}
 
 	
@@ -132,7 +147,7 @@ class App extends Component {
 			? this.convertPrice(data.PRICE, data.TOSYMBOL, this.userDenomination)
 			: data.PRICE;
 
-		//console.log('ata.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
+		//console.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
 		//console.dir(convertedPrice);
 		
 		this.rawPrices[data.FROMSYMBOL] = data.PRICE;
@@ -158,6 +173,11 @@ class App extends Component {
 		this.setState((prevState) => {
 			return Object.assign(prevState.settings, setting);
 		});
+	}
+
+
+	handleStatusChange(apiStatus) {
+		this.setState({apiStatus: apiStatus});
 	}
 
 
@@ -200,7 +220,8 @@ class App extends Component {
 
 	render() {
 		
-		const coins = this.state.coins,
+		const apiStatus = this.state.apiStatus,
+			  coins = this.state.coins,
 			  prices = this.state.prices,
 			  settings = this.state.settings,
 			  settingsOpen = this.state.settingsOpen;
@@ -232,9 +253,10 @@ class App extends Component {
 		) : false;
 
 		return (
-			<div className="App">
+			<div className={"App " + apiStatus.toLowerCase()}>
 
 				<div className="App-header">
+					<AppStatus status={apiStatus} />
 					<img src={logo} className="App-logo" alt="logo" onClick={this.toggleSettings} />
 					<h2>Welcome to CoinScout</h2>
 					<PortfolioSummary

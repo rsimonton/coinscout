@@ -8,11 +8,15 @@ class CoinPrice extends Component {
 		const change = this.props.change;
 		const price = this.props.price;
 		const denomination = this.props.denomination;
-
+		const priceHistory = this.props.priceHistory;
 		const symbol = CoinPrice.SIGNS[denomination];
 
+		const tooltip = Object.keys(priceHistory).reduce((title, timestamp) => {
+			return title + timestamp + ': ' + priceHistory[timestamp] + '\n';
+		}, '');
+
 		return (
-			<div className={'Coin-price Coin-price-' + change}>
+			<div className={'Coin-price Coin-price-' + change} title={tooltip}>
 				<span className='Coin-price-sign'>{symbol}</span>
 				<span className='Coin-price-price'>{price}</span>
 			</div>

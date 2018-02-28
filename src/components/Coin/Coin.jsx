@@ -16,7 +16,11 @@ class Coin extends Component {
 		this.name = this.props.name;
 		this.symbol = this.props.symbol;	// need a permanent reference
 
-		this.priceChangeLast = CoinPrice.changeTypes[CoinPrice.UNCHANGED];		
+		this.lastPrice = NaN;
+
+		this.priceChangeLast = CoinPrice.changeTypes[CoinPrice.UNCHANGED];	
+		this.priceHistory = {};
+
 		this.state = {
 			invalid: true,
 			weight: 0
@@ -29,9 +33,9 @@ class Coin extends Component {
 
 	componentDidMount() {
 		const subscribed = apiSubscribe(
-			this.props.exchange,
+			//this.props.exchange,
 			this.props.symbol,
-			this.props.market,
+			//this.props.market,
 			this.handleData
 		);
 
@@ -127,20 +131,26 @@ class Coin extends Component {
 	render() {
 		//console.log('his.props);
 
-		const {denomination, pricePrecision, stack, ...props} = this.props;
+		const {denomination, pricePrecision, icon, stack, ...props} = this.props;
 		const invalid = this.state.invalid;
 		const priceChange = this.state.priceChange;
 		const price = this.state.price;
 		const weight = this.state.weight;
 		const className = 'Coin Coin-' + this.symbol + (invalid ? ' Coin-invalid' : '');
 
+		if(price !== this.lastPrice) {
+			this.lastPrice = price;
+			this.priceHistory[new Date().getTime()] = price;
+		}
+
 		return (
 			<div className={className} data-weight={weight} onClick={this.handleClick}>
-				<CoinLabel name={this.name} label={this.label} />
+				<CoinLabel name={this.name} label={this.label} icon={icon} />
 				<CoinPrice
 					change={priceChange}
 					price={price}
-					denomination={denomination} />
+					denomination={denomination}
+					priceHistory={this.priceHistory} />
 				<CoinStack
 					onValueChange={this.handleStackValueChange}
 					symbol={this.symbol}

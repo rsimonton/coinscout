@@ -2,7 +2,7 @@
 //
 // see:  https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API?from=etop
 const API_ENDPOINT = 'https://api.ethplorer.io/';
-const API_KEY = 'freekey';
+const API_KEY = 'dsrep8752PEQuZW88';
 
 const ENDPOINT_WALLET_INFO = API_ENDPOINT + 'getAddressInfo/';
 

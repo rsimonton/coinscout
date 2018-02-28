@@ -6,6 +6,7 @@
 	cursor: pointer;
 	display: inline-block;
 	font-family: 'Open Sans', sans-serif;
+	font-size: 22px;	
 	margin: 12px;
 	overflow: hidden;
 	padding: 8px 12px;
@@ -27,14 +28,6 @@
 	line-height: 32px;
 }
 
-.Coin-label.Coin-label-16 {
-	font-size: 20px;
-}
-
-.Coin-label.Coin-label-32 {
-	font-size: 22px;
-}
-
 .Coin-label .Coin-logo {
 	background-repeat: no-repeat;
 	background-position: center center;
@@ -42,6 +35,7 @@
 }
 
 .Coin-label.Coin-label-16 .Coin-logo {
+	background-size: 16px;
 	height: 16px;
 	width: 16px;
 	border-radius: 8px;
@@ -49,12 +43,12 @@
 }
 
 .Coin-label.Coin-label-32 .Coin-logo {
+	background-size: 32px;
 	height: 32px;
 	width: 32px;
 	border-radius: 16px;
 	margin-right: 8px;
 }
-
 
 .Coin-label.Coin-label-32 .Coin-name {
 	position: relative;
@@ -62,18 +56,14 @@
 }
 
 .Coin-price {
-	/*float: right;*/
-	font-size: 22px;
 	text-align: right;
 }
 .Coin-price-decreasing {
 	color: red;
 }
-
 .Coin-price-increasing {
 	color: green;
 }
-
 .Coin-price-unchanged {
 	color: black;
 }
@@ -86,7 +76,7 @@
 
 .Coin-stack {
 	color: #888;
-	font-size: .85em;
+	font-size: .62em;
 	margin-top: 6px;
 }
 
