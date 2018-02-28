@@ -53,7 +53,6 @@ function apiInit(callback) {
 }
 
 
-//function apiSubscribe(exchange, symbol, market, callback) {
 function apiSubscribe(symbol, callback) {
 	
 	if(!initialized) {
