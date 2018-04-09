@@ -256,9 +256,12 @@ class App extends Component {
 			<div className={"App " + apiStatus.toLowerCase()}>
 
 				<div className="App-header">
+
 					<AppStatus status={apiStatus} />
+				
 					<img src={logo} className="App-logo" alt="logo" onClick={this.toggleSettings} />
 					<h2>Welcome to CoinScout</h2>
+				
 					<PortfolioSummary
 						coins={coins}
 						prices={prices}
@@ -269,8 +272,13 @@ class App extends Component {
 				<SettingsPanel settings={settings} onChange={this.handleSettingsChange} isOpen={settingsOpen} />
 				
 				<div className="App-content">
-					<Coins coins={coinComponents} />
-					{watchlist && <Coins coins={watchlist} />}
+					<div class="column coins">
+						<Coins coins={coinComponents} />
+						{watchlist && <Coins coins={watchlist} />}
+					</div>
+					<div class="column history">
+						
+					</div>
 				</div>
 			
 				<div className="App-footer">
