@@ -12,7 +12,7 @@ export default {
 		
 	],
 	//
-	// Entery coins you hold on exchanges here.
+	// Enter coins you hold on exchanges here.
 	//
 	// Each entry is an object with format:
 	//

@@ -272,11 +272,11 @@ class App extends Component {
 				<SettingsPanel settings={settings} onChange={this.handleSettingsChange} isOpen={settingsOpen} />
 				
 				<div className="App-content">
-					<div class="column coins">
+					<div className="column coins">
 						<Coins coins={coinComponents} />
 						{watchlist && <Coins coins={watchlist} />}
 					</div>
-					<div class="column history">
+					<div className="column history">
 						
 					</div>
 				</div>
