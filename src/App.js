@@ -71,7 +71,8 @@ class App extends Component {
 					name: tokenInfo.CoinName,
 					symbol: coin.symbol,
 					icon: tokenInfo.ImageUrl,
-					stack: stack
+					stack: stack,
+					weight: 0
 				};
 			}
 			else {
@@ -90,9 +91,11 @@ class App extends Component {
 
 		// Bind handlers
 		this.handleData = this.handleData.bind(this);
+		this.handleHide = this.handleHide.bind(this);
 		this.handleSettingsChange = this.handleSettingsChange.bind(this);
 		this.handleStatusChange = this.handleStatusChange.bind(this);
 		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
+		this.handleWeightChange = this.handleWeightChange.bind(this);
 		this.toggleSettings = this.toggleSettings.bind(this);
 
 		addApiStatusListener(this.handleStatusChange);
@@ -158,6 +161,11 @@ class App extends Component {
 		});
 	}
 
+	handleHide(coinProps) {
+		let hidden = this.state.settings.hidden || [];
+		hidden.push(coinProps.symbol);
+		this.handleSettingsChange({hidden});
+	}
 
 	/**
 	 * @param setting Key/value of setting and it's new value
@@ -209,6 +217,15 @@ class App extends Component {
 	}
 
 
+	handleWeightChange(symbol, newWeight) {
+		this.setState(prevState => {
+			prevState.coins[symbol].weight = newWeight;
+			prevState.totalWeight = Object.values(prevState.coins).reduce((total, coin) => total + (coin.weight || 0), 0);
+			return prevState;
+		});
+	} 
+
+
 	toggleSettings() {
 		const isOpen = this.state.settingsOpen,
 			  nextState = !isOpen;
@@ -226,17 +243,24 @@ class App extends Component {
 			  settings = this.state.settings,
 			  settingsOpen = this.state.settingsOpen;
 
+		const hidden = settings.hidden || [];
+
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
-		const coinComponents = Object.values(coins).map((coin, index) =>
-			<Coin key={index}
-				marketCapSite={settings.marketCapSite}
-				price={prices[coin.symbol]}
-				denomination={this.normalizeValues ? this.userDenomination : coin.market}
-				pricePrecision={coin.pricePrecision || appConfig.pricePrecision}
-				onData={this.handleData}
-				formatters={this.currencyFormatters}
-				settings={settings}
-				{...coin} />
+		const coinComponents = Object.values(coins)
+			.filter(coin => !hidden.includes(coin.symbol))
+			.sort((a,b) => a.weight < b.weight ? 1 : (a.weight > b.weight ? -1 : 0))
+			.map((coin, index) =>
+				<Coin key={index}
+					denomination={this.normalizeValues ? this.userDenomination : coin.market}
+					formatters={this.currencyFormatters}
+					marketCapSite={settings.marketCapSite}
+					onData={this.handleData}
+					onHide={this.handleHide}
+					onWeightChange={this.handleWeightChange}
+					price={prices[coin.symbol]}
+					pricePrecision={coin.pricePrecision || appConfig.pricePrecision}
+					settings={settings}
+					{...coin} />
 		);
 
 		// Populate watch list, or not, based on settings

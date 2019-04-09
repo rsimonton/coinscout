@@ -18,8 +18,38 @@
 	box-shadow: 2px 3px 3px #ccc;
 }
 
+.Coin:hover .Coin-hide-button {
+	visibility: visible;
+}
+
 .Coin.Coin-invalid {
-	border: solid 1px red;
+   filter: grayscale(100%);
+	-webkit-filter: grayscale(100%); /* Chrome, Safari, Opera */
+	opacity: .5;
+	pointer-events: none;
+}
+
+.Coin-hide-button {
+	background-color: #f4f4f4;
+	border: solid 1px transparent;
+	border-radius: 8px;
+	float: right;
+	font-size: 12px;
+	height: 15px;
+	width: 15px;
+	line-height: 17px;
+	text-align: center;
+	vertical-align: middle;
+	visibility: hidden;
+}
+
+.Coin-hide-button:hover {
+	background-color: #fff;
+}
+
+.Coin-hide-button:active {
+	background-color: #ccc;
+	border: solid 1px #ddd;
 }
 
 .Coin-label {

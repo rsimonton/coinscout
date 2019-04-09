@@ -49,6 +49,7 @@ class SettingsPanel extends Component {
 								<option>CoinMarketCap</option>
 								<option>CryptoCompare</option>
 								<option>LiveCoinWatch</option>
+								<option>Messari</option>
 						</select>
 					</label>
 				</div>

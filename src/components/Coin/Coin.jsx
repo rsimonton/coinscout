@@ -12,8 +12,6 @@ class Coin extends Component {
 	constructor(props) {
 		super(props);
 
-		this.label = this.props.label;
-		this.name = this.props.name;
 		this.symbol = this.props.symbol;	// need a permanent reference
 
 		this.lastPrice = NaN;
@@ -28,18 +26,21 @@ class Coin extends Component {
 
 		this.handleClick = this.handleClick.bind(this);
 		this.handleData = this.handleData.bind(this);
+		this.handleHide = this.handleHide.bind(this);
 		this.handleStackValueChange = this.handleStackValueChange.bind(this);		
 	}
 
 	componentDidMount() {
 		const subscribed = apiSubscribe(
-			//this.props.exchange,
 			this.props.symbol,
-			//this.props.market,
 			this.handleData
 		);
 
-		this.setState({invalid: !subscribed});
+		const newState = {subscribed: true};
+
+		this.state.invalid && this.state.priced && (newState.invalid = false);
+
+		this.setState(newState);
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -47,6 +48,7 @@ class Coin extends Component {
 		const priceRaw = parseFloat(nextProps.price);
 
 		if(Number.isNaN(priceRaw)) {
+			this.state.invalid || this.setState({invalid: true});
 			return;
 		}
 
@@ -68,24 +70,37 @@ class Coin extends Component {
 		const priceNormalized = parseFloat(priceRaw).toFixed(pricePrecision);
 
 		// Did the price go up/down or unchanged?
-		const unchanged = priceNormalized === parseFloat(this.state.price).toFixed(pricePrecision);
-		const priceChangeThis = unchanged
+		const priceUnchanged = priceNormalized === parseFloat(this.state.price).toFixed(pricePrecision);
+		const priceChangeThis = priceUnchanged
 			? this.state.priceChange
 			: CoinPrice.changeTypes[flags];
 
 		//console.log('change: ' + flags + ' = ' + priceChangeThis);
-		const newWeight = unchanged
+		const newWeight = priceUnchanged
 			? this.state.weight
 			: this.state.weight + (flags === CoinPrice.INCREASING ? 1 : -1);
 
 		// Keep track of last price change
 		this.priceChangeLast = priceChangeThis;
 
-		this.setState({
+		const newState = {};
+
+		// we have a price, so we're valid now unless still not subscribed
+		this.state.invalid && this.state.subscribed && (newState.invalid = false);
+		
+		priceUnchanged || Object.assign(newState, {
 			price: priceNormalized,
 			priceChange: priceChangeThis,
-			weight: newWeight});
-		//}, () => console.log('extProps.symbol + ': ' + newWeight));		
+			weight: newWeight
+		});
+
+		Object.keys(newState).length && this.setState(newState);
+
+		// This is where we were bubbling the coins weight change up to the app, 
+		// with the idea that the app could sort the coins based on their weights.
+		// This causes problems with React due to too many updates, which I'm not
+		// sure what the cause of was, so shelving that idea for now.
+		//priceUnchanged || this.props.onWeightChange(this.props.symbol, newWeight);
 	}
 
 	handleClick() {
@@ -102,6 +117,8 @@ class Coin extends Component {
 			case 'LiveCoinWatch':
 				link = 'https://www.livecoinwatch.com/price/' + this.props.name.replace(/ /g, '') + '-' + this.props.symbol;
 				break;
+			case 'Messari':
+				link = 'https://messari.io/asset/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
 			default:
 				console.log('No "marketCapSite" config item set, ignoring coin click');
 				break;
@@ -115,6 +132,11 @@ class Coin extends Component {
 		this.setState(data, function() {
 			this.props.onData(data)
 		});
+	}
+
+	handleHide(event) {
+		event.stopPropagation();
+		this.props.onHide && this.props.onHide(this.props);
 	}
 
 	handlePriceChange(upOrDown) {
@@ -131,12 +153,12 @@ class Coin extends Component {
 	render() {
 		//console.log('his.props);
 
-		const {denomination, pricePrecision, icon, stack, ...props} = this.props;
+		const {denomination, label, name, pricePrecision, icon, stack, symbol, ...props} = this.props;
 		const invalid = this.state.invalid;
 		const priceChange = this.state.priceChange;
 		const price = this.state.price;
 		const weight = this.state.weight;
-		const className = 'Coin Coin-' + this.symbol + (invalid ? ' Coin-invalid' : '');
+		const className = `Coin Coin-${symbol} ${invalid ? ' Coin-invalid' : ''}`;
 
 		if(price !== this.lastPrice) {
 			this.lastPrice = price;
@@ -145,7 +167,8 @@ class Coin extends Component {
 
 		return (
 			<div className={className} data-weight={weight} onClick={this.handleClick}>
-				<CoinLabel name={this.name} label={this.label} icon={icon} />
+				<CoinHideButton onClick={this.handleHide} />
+				<CoinLabel name={name} label={label} icon={icon} />
 				<CoinPrice
 					change={priceChange}
 					price={price}
@@ -161,6 +184,13 @@ class Coin extends Component {
 		);
 	}
 
+}
+
+class CoinHideButton extends Component {
+	render() {
+		const {...props} = this.props;
+		return <div className="Coin-hide-button" {...props}>✕</div>;
+	}
 }
 
 export default Coin;

@@ -43,6 +43,7 @@ export default {
 	//		* CoinMarketCap
 	//		* CryptoCompare
 	//		* LiveCoinWatch
+	//		* Messari
 	//
 	// Note that not all sites list all markets for every coin, or even list
 	// every coin.

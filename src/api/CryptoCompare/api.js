@@ -71,19 +71,26 @@ function apiSubscribe(symbol, callback) {
 	fetch(API_ENDPOINT_CORS + 'subsWatchlist?fsyms=' + symbol + '&tsym=USD')
 		.then(res => res.json())
 		.then(json => {
-			json[symbol].RAW.forEach(sub => {
-				const subKey = CCC.CURRENT.getKeyFromStreamerData(sub);
-				console.log('Adding coin subscription: ' + subKey);
 
-				// Store reference to subscription-specific callback
-				const subscribed = subscriptions.has(subKey);
-				subscribed || (subscriptions.set(subKey, []));
-				subscriptions.get(subKey).push(callback);
+			if(true === json['HasWarning']) {
+				// Using alert here because I want to pause, and because I want to be certain this is seen
+				window.alert(`CryptoCompare API Error: ${json.Warning}`);
+			}
+			else {
+				json[symbol].RAW.forEach(sub => {
+					const subKey = CCC.CURRENT.getKeyFromStreamerData(sub);
+					console.log('Adding coin subscription: ' + subKey);
 
-				subscribed || ws.emit('SubAdd', {
-					subs: [subKey]
+					// Store reference to subscription-specific callback
+					const subscribed = subscriptions.has(subKey);
+					subscribed || (subscriptions.set(subKey, []));
+					subscriptions.get(subKey).push(callback);
+
+					subscribed || ws.emit('SubAdd', {
+						subs: [subKey]
+					});
 				});
-			});
+			}
 		});
 
 	// Indicate success

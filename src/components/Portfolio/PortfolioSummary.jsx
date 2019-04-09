@@ -17,7 +17,13 @@ export default class PortfolioSummary extends Component {
 		// Behold the mighty power of Array.reduce!
 		const portfolioValue = Object.keys(coins).reduce((total, symbol) => {
 			let coin = coins[symbol];
+
+			if(undefined == coinPrices[coin.symbol]) {
+				return total;
+			}
+
 			const coinCount = coin.stack.reduce((stack, source) => stack + source.balance, 0);
+			
 			return total + (coinCount * coinPrices[coin.symbol]);
 		}, 0);
 
