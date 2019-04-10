@@ -5,12 +5,15 @@
  * functionality, e.g. shares owned, purchase dates/costs, etc.
  */
 export default {
-	//
-	// Public ERC20 wallet addresses hodling ETH/tokens
-	//
-	erc20Wallets: [
-		
-	],
+	blockchains: {
+		aion: [
+			/* AION addresses here */
+		],
+		// Public ERC20 wallet addresses hodling ETH/tokens
+		ethereum: [
+			/* ERC20 addresses here */
+		]		
+	},
 	//
 	// Enter coins you hold on exchanges here.
 	//

@@ -104,30 +104,29 @@ class App extends Component {
 	
 	componentDidMount() {
 
-		//apiFinalize();
-
 		// This may not be necessary - force to boolean
 		this.setState(prevState => { 
 			return { settingsOpen: !!prevState.settings.settingsOpen }
 		});
 
-		/* A succesful experiment - reorder Coin elements iu UI based on symbol after 3 seconds -- cool!
-		let self = this;
-		window.setTimeout(function() {
-			coinConfig.portfolio.sort(function(a,b) {
-				return a.symbol < b.symbol ? -1 : (a.symbol === b.symbol ? 0 : 1);
-			});
+		// Load blockchain addresses from config and register with respective API
+		for(let blockchain in coinConfig.blockchains) {
 
-			self.setState({coinConfig: coinConfig});
-		}, 3000);
-		*/
+			let addresses = coinConfig.blockchains[blockchain];
 
-		coinConfig.erc20Wallets.forEach(addr => {
-			let w = new Erc20Wallet({
-				address: addr,
-				onWalletLoaded: this.handleWalletLoaded
-			});
-		});
+			switch(blockchain) {
+				case 'ethereum':
+					addresses.forEach(addr => {
+						let w = new Erc20Wallet({
+							address: addr,
+							onWalletLoaded: this.handleWalletLoaded
+						});
+					});
+					break;
+				default:
+					console.warn(`API integration for ${blockchain} not yet implemented`);
+			}
+		}
 	}
 
 	
