@@ -7,7 +7,7 @@ import { apiSubscribe } from 'api/CryptoCompare/api.js';
 
 import './Coin.css';
 
-class Coin extends Component {
+export default class Coin extends Component {
 	
 	constructor(props) {
 		super(props);
@@ -192,5 +192,3 @@ class CoinHideButton extends Component {
 		return <div className="Coin-hide-button" {...props}>✕</div>;
 	}
 }
-
-export default Coin;

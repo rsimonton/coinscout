@@ -1,42 +1,12 @@
-import { Component } from 'react';
+import Wallet from './Wallet.js';
 import { getWalletInfo } from 'api/Ethplorer/api.js';
-import { getTokenInfo } from 'api/CryptoCompare/api.js';
 
-export default class Erc20Wallet extends Component {
-
-	static defaults = {
-		convertValues: false
-	}
+export default class Erc20Wallet extends Wallet {
 
 	constructor(props) {
 		super(props);
-
-		this.state = {};
-		this.tokens = [];
-		
 		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
-
-		getWalletInfo(this.props.address, this.handleWalletLoaded);
-	}
-
-	addToken(name, symbol, icon, stack) {
-		let data = {
-			address: this.props.address,
-			name: name.replace(/Network Token$/,''),
-			symbol: symbol,
-			icon: icon,
-			market: 'USD',
-			stack: [{
-				source: this.props.address,
-				balance: stack
-			}]			
-		};
-
-		this.tokens.push(data);
-	}
-
-	getTokens() {
-		return this.tokens;
+		getWalletInfo(this.props.address, this.handleWalletLoaded);			
 	}
 
 	handleWalletLoaded(walletInfo) {
@@ -45,7 +15,7 @@ export default class Erc20Wallet extends Component {
 
 		// API breaks out ETH, treating it differently that ERC20 tokens
 		if(walletInfo.ETH && walletInfo.ETH.balance) {
-			tokenInfo = getTokenInfo('ETH');
+			tokenInfo = this.getTokenInfo('ETH');
 			this.addToken(
 				tokenInfo.CoinName,
 				'ETH',
@@ -65,7 +35,7 @@ export default class Erc20Wallet extends Component {
 				return; // 'continue' equiv
 			}
 
-			tokenInfo = getTokenInfo(token.symbol);
+			tokenInfo = this.getTokenInfo(token.symbol);
 
 			tokenInfo && this.addToken(
 				tokenInfo.CoinName,
@@ -76,10 +46,6 @@ export default class Erc20Wallet extends Component {
 		});
 
 		this.props.onWalletLoaded && this.props.onWalletLoaded(this);
-	}
-
-	render() {
-		return null;
 	}
 
 }

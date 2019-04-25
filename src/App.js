@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import AppStatus from './components/App/AppStatus';
 import Coin from './components/Coin/Coin.jsx';
 import Coins from './components/Coins/Coins.jsx';
+import AionWallet from './components/Wallet/AionWallet.jsx';
 import Erc20Wallet from './components/Wallet/Erc20Wallet.jsx';
 import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
 import SettingsPanel from './components/Settings/SettingsPanel.jsx';
@@ -115,6 +116,16 @@ class App extends Component {
 			let addresses = coinConfig.blockchains[blockchain];
 
 			switch(blockchain) {
+				
+				case 'aion':
+					addresses.forEach(addr => {
+						let w = new AionWallet({
+							address: addr,
+							onWalletLoaded: this.handleWalletLoaded
+						});
+					});
+					break;
+
 				case 'ethereum':
 					addresses.forEach(addr => {
 						let w = new Erc20Wallet({
@@ -123,6 +134,7 @@ class App extends Component {
 						});
 					});
 					break;
+				
 				default:
 					console.warn(`API integration for ${blockchain} not yet implemented`);
 			}
