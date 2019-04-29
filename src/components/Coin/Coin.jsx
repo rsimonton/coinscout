@@ -119,9 +119,9 @@ export default class Coin extends Component {
 				break;
 			case 'Messari':
 				link = 'https://messari.io/asset/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
+				break;
 			default:
 				console.log('No "marketCapSite" config item set, ignoring coin click');
-				break;
 		}
 
 		link && window.open(link);

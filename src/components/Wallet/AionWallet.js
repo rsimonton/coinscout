@@ -11,7 +11,7 @@ export default class AionWallet extends Wallet {
 
 	handleWalletLoaded(walletInfo) {
 
-		console.log('Loaded account from AION address ' + this.props.address);
+		console.log('Loaded AION address ' + this.props.address);
 	
 		const tokenInfo = this.getTokenInfo('AION');
 

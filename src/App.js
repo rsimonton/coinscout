@@ -3,8 +3,9 @@ import React, { Component } from 'react';
 import AppStatus from './components/App/AppStatus';
 import Coin from './components/Coin/Coin.jsx';
 import Coins from './components/Coins/Coins.jsx';
-import AionWallet from './components/Wallet/AionWallet.jsx';
-import Erc20Wallet from './components/Wallet/Erc20Wallet.jsx';
+import AionWallet from './components/Wallet/AionWallet.js';
+import BitcoinWallet from './components/Wallet/BitcoinWallet.js';
+import Erc20Wallet from './components/Wallet/Erc20Wallet.js';
 import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
 import SettingsPanel from './components/Settings/SettingsPanel.jsx';
 import { addApiStatusListener, getApiStatus, getTokenInfo } from './api/CryptoCompare/api.js';
@@ -120,6 +121,15 @@ class App extends Component {
 				case 'aion':
 					addresses.forEach(addr => {
 						let w = new AionWallet({
+							address: addr,
+							onWalletLoaded: this.handleWalletLoaded
+						});
+					});
+					break;
+
+				case 'bitcoin':
+					addresses.forEach(addr => {
+						let w = new BitcoinWallet({
 							address: addr,
 							onWalletLoaded: this.handleWalletLoaded
 						});
