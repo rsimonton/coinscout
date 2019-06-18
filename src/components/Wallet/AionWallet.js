@@ -19,7 +19,7 @@ export default class AionWallet extends Wallet {
 			tokenInfo.CoinName,
 			tokenInfo.Symbol,
 			tokenInfo.ImageUrl,
-			walletInfo.balance				
+			Number(walletInfo.balance) // suddenly started being returned by API as a string
 		);
 
 		this.props.onWalletLoaded && this.props.onWalletLoaded(this);

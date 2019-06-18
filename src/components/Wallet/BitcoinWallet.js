@@ -1,5 +1,5 @@
 import Wallet from './Wallet.js';
-import { getWalletInfo } from 'api/BlockExplorer/api.js';
+import { getWalletInfo } from 'api/BlockchainInfo/api.js';
 
 /**
  * This is a misnomer, Bitcoin doesn't have a wallet concept, it uses one-time-use
@@ -14,9 +14,9 @@ export default class BitcoinWallet extends Wallet {
 		getWalletInfo(this.props.address, this.handleWalletLoaded);			
 	}
 
-	handleWalletLoaded(walletInfo) {
+	handleWalletLoaded(balance) {
 
-		console.log('Loaded Bitcoin balance from address ' + this.props.address);
+		console.log('Loaded Bitcoin address ' + this.props.address);
 	
 		const tokenInfo = this.getTokenInfo('BTC');
 
@@ -24,7 +24,8 @@ export default class BitcoinWallet extends Wallet {
 			tokenInfo.CoinName,
 			tokenInfo.Name,
 			tokenInfo.ImageUrl,
-			walletInfo.balance
+			// Convert from sats to btc
+			balance / 100000000
 		);
 
 		this.props.onWalletLoaded && this.props.onWalletLoaded(this);

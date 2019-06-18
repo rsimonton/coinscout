@@ -10,7 +10,7 @@ const API_ENDPOINT = 'https://api.ethplorer.io',
 	API_KEY = config.apiKey,
 	ENDPOINT_WALLET_INFO = `${API_ENDPOINT}/getAddressInfo`,
 	REQUEST_QUEUE = [],
-	THROTTLE_INTERVAL = 100; // millis - avoid 429s @ Ethplorer.io
+	THROTTLE_INTERVAL = 200; // millis - avoid 429s @ Ethplorer.io
 
 // Just syntactic sugar
 const get = (walletAddress) => fetch(`${ENDPOINT_WALLET_INFO}/${walletAddress}/?apiKey=${API_KEY}`);

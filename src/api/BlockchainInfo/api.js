@@ -3,8 +3,8 @@
 // e.g. https://blockexplorer.com/api/addr/3P8R6sEdvMPkVnn538wuTsTQ6ASyeBgitg
 //
 // see:  https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API?from=etop
-const API_ENDPOINT = 'https://blockexplorer.com/api',
-	ENDPOINT_ADDRESS_INFO = `${API_ENDPOINT}/addr`,
+const API_ENDPOINT = 'https://blockchain.info/q',
+	ENDPOINT_ADDRESS_INFO = `${API_ENDPOINT}/addressbalance`,
 	REQUEST_QUEUE = [],
 	THROTTLE_INTERVAL = 10; // millis
 
