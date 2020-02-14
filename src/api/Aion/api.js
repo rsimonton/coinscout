@@ -1,7 +1,7 @@
 //
 // AION API integation:  https://docs.aion.network/reference
 //
-const API_ENDPOINT = 'https://mainnet-api.aion.network/aion/dashboard',	// 'mastery-api' for Testnet
+const API_ENDPOINT = 'https://mainnet-api.theoan.com/aion/dashboard',	// 'mastery-api' for Testnet
 	ENDPOINT_WALLET_INFO = `${API_ENDPOINT}/getAccountDetails`,
 	REQUEST_QUEUE = [],
 	THROTTLE_INTERVAL = 10; // millis - avoid 429s @ Ethplorer.io

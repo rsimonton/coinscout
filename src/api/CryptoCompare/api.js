@@ -74,22 +74,28 @@ function apiSubscribe(symbol, callback) {
 
 			if(true === json['HasWarning']) {
 				// Using alert here because I want to pause, and because I want to be certain this is seen
-				window.alert(`CryptoCompare API Error: ${json.Warning}`);
+				window.confirm(`CryptoCompare API Error: '${json.Warning}', hide it?`) && callback && callback(null);
 			}
 			else {
-				json[symbol].RAW.forEach(sub => {
-					const subKey = CCC.CURRENT.getKeyFromStreamerData(sub);
-					console.log('Adding coin subscription: ' + subKey);
+				if(undefined === json[symbol]) {
+					// TODO - handle actually ignoring the symbol :)
+					window.confirm(`No data found for symbol '${symbol}', hide it?`) && callback && callback(null);
+				}
+				else {
+					json[symbol].RAW.forEach(sub => {
+						const subKey = CCC.CURRENT.getKeyFromStreamerData(sub);
+						console.log('Adding coin subscription: ' + subKey);
 
-					// Store reference to subscription-specific callback
-					const subscribed = subscriptions.has(subKey);
-					subscribed || (subscriptions.set(subKey, []));
-					subscriptions.get(subKey).push(callback);
+						// Store reference to subscription-specific callback
+						const subscribed = subscriptions.has(subKey);
+						subscribed || (subscriptions.set(subKey, []));
+						subscriptions.get(subKey).push(callback);
 
-					subscribed || ws.emit('SubAdd', {
-						subs: [subKey]
+						subscribed || ws.emit('SubAdd', {
+							subs: [subKey]
+						});
 					});
-				});
+				}
 			}
 		});
 

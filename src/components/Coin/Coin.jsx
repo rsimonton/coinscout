@@ -129,13 +129,20 @@ export default class Coin extends Component {
 
 	handleData(data) {
 		//console.dir(data);
+
+		// 'data' is null if API subscription attempt returned no data. Hide the symbol
+		if(null === data) {
+			this.handleHide();
+			return;
+		}
+
 		this.setState(data, function() {
 			this.props.onData(data)
 		});
 	}
 
 	handleHide(event) {
-		event.stopPropagation();
+		event && event.stopPropagation();
 		this.props.onHide && this.props.onHide(this.props);
 	}
 
