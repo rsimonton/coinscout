@@ -1,23 +1,28 @@
-import io from 'socket.io-client';
-import CCC from './vendor.js';
+import config from './config.js';
 
 // API Docs: https://min-api.cryptocompare.com/
-const API_ENDPOINT_CORS = 'https://min-api.cryptocompare.com/data/';
-const STREAMING_ENDPOINT = 'wss://streamer.cryptocompare.com';
-const QUOTE_TYPE = CCC.STATIC.TYPE.CURRENTAGG;
-const TOKEN_DATA_KEY = 'cryptoCompare.tokenData';
-const API_STATUS = {
-	CONNECTING: 'Connecting',
-	CONNECTED: 'Connected',
-	DISCONNECTED: 'Disconnected'
-};
+const API_ENDPOINT_CORS = 'https://min-api.cryptocompare.com/data/',
+	IMAGE_URL_BASE = 'https://cryptocompare.com',
+	MESSAGE_TYPE_DATA = '5', // must be a String
+	STREAMING_ENDPOINT = 'wss://streamer.cryptocompare.com/v2',
+	API_STATUS = {
+		CONNECTING: 'Connecting',
+		CONNECTED: 'Connected',
+		DISCONNECTED: 'Disconnected',
+		ERROR: 'Error'
+	};
 
-let ws,
-	apiStatus = API_STATUS.DISCONNECTED,
-	tokenInfo = window.localStorage[TOKEN_DATA_KEY],
+const statusListeners = [],
+	subscriptions = new Map(),
+	tokenInfo = {};
+
+let	apiStatus = API_STATUS.DISCONNECTED,
 	initialized = false,
-	statusListeners = [],
-	subscriptions = new Map();
+	ws;
+
+//
+// Functions
+//
 
 
 function addApiStatusListener(callback) {
@@ -25,31 +30,56 @@ function addApiStatusListener(callback) {
 }
 
 
+function addSubscription(tokenSymbol) {
+
+	let subKey = buildSubKey(tokenSymbol);
+
+	websocketSend({
+		action: 'SubAdd',
+		subs: [subKey]
+	});
+}
+
+
+function apiConnected() {
+	return API_STATUS.CONNECTED == getApiStatus();
+}
+
+
 function apiInit(callback) {
 	//
 	// Fetch general info for all coins
 	//
-	if(tokenInfo) {
-		tokenInfo = JSON.parse(tokenInfo);
-		initWebsocket(callback);
-	}
-	else {
-		tokenInfo = {};
+	fetch(API_ENDPOINT_CORS + 'all/coinlist')
+		.then(response => response.json())
+		.then(json => {
+			// Map symbol to CryptoCompare internal ID
+			Object.keys(json.Data).forEach(symbol => {
+				const data = json.Data[symbol];
 
-		// Not present in localStorage, fetch
-		fetch(API_ENDPOINT_CORS + 'all/coinlist')
-			.then(response => response.json())
-			.then(json => {
-				// Map symbol to CryptoCompare internal ID
-				Object.keys(json.Data).forEach(symbol => tokenInfo[symbol] = json.Data[symbol]);
-				window.localStorage[TOKEN_DATA_KEY] = JSON.stringify(tokenInfo);
+				// Api only returns path to image, we'll be nice and provide fully q'd URL. Yes
+				// it means storing lots of copies of the same string but I'm out of time. Maybe
+				// instead expose a method getImageUrl(symbol) that calls getTokenInfo to look
+				// up the base URL and then return fully q'd.  The issue there is that all API
+				// implementations (e.g. for Bitcoin) also need to expose that same method. Not
+				// bad, I like it, but I'm out of time
+				data.ImageUrl = IMAGE_URL_BASE + data.ImageUrl;
 
-				initWebsocket(callback);
-			})
-			.catch(function(err) {
-				throw Error('api.js -- failed to load coin infos: ' + err);
+				tokenInfo[symbol] = data;
 			});
-	}
+
+			console.log(`Loaded ${Object.keys(tokenInfo).length} tokens from CryptoCompare`);
+
+			initWebsocket(callback);
+		})
+		.catch(function(err) {
+			throw Error('api.js -- failed to load coin infos: ' + err);
+		});
+}
+
+
+function buildSubKey(symbol) {
+	return `${MESSAGE_TYPE_DATA}~CCCAGG~${symbol}~USD`.toUpperCase();
 }
 
 
@@ -66,38 +96,17 @@ function apiSubscribe(symbol, callback) {
 		return false;
 	}
 
-	//getTokenInfo(symbol);
+	console.log('Adding coin subscription: ' + symbol);
+
+	// Store reference to subscription-specific callback
+	const subscribed = subscriptions.has(symbol);
 	
-	fetch(API_ENDPOINT_CORS + 'subsWatchlist?fsyms=' + symbol + '&tsym=USD')
-		.then(res => res.json())
-		.then(json => {
+	subscribed || subscriptions.set(symbol, []);
 
-			if(true === json['HasWarning']) {
-				// Using alert here because I want to pause, and because I want to be certain this is seen
-				window.confirm(`CryptoCompare API Error: '${json.Warning}', hide it?`) && callback && callback(null);
-			}
-			else {
-				if(undefined === json[symbol]) {
-					// TODO - handle actually ignoring the symbol :)
-					window.confirm(`No data found for symbol '${symbol}', hide it?`) && callback && callback(null);
-				}
-				else {
-					json[symbol].RAW.forEach(sub => {
-						const subKey = CCC.CURRENT.getKeyFromStreamerData(sub);
-						console.log('Adding coin subscription: ' + subKey);
+	// Even if already subscribed, add the additional callback
+	subscriptions.get(symbol).push(callback);
 
-						// Store reference to subscription-specific callback
-						const subscribed = subscriptions.has(subKey);
-						subscribed || (subscriptions.set(subKey, []));
-						subscriptions.get(subKey).push(callback);
-
-						subscribed || ws.emit('SubAdd', {
-							subs: [subKey]
-						});
-					});
-				}
-			}
-		});
+	subscribed || addSubscription(symbol);
 
 	// Indicate success
 	return true;
@@ -109,58 +118,72 @@ function getApiStatus() {
 }
 
 
-function getTokenInfo(symbol) {
-	return tokenInfo[symbol]
-		? tokenInfo[symbol]
-		: false;
+function getTokenInfo(symbol, callback) {
+	const i = tokenInfo[symbol] || false;
+	callback && callback(i);
+	return i;
 }
+
 
 function initWebsocket(callback) {
 	
 	setStatus(API_STATUS.CONNECTING);
 
-	ws = io(STREAMING_ENDPOINT);
+	ws = new WebSocket(`${STREAMING_ENDPOINT}?api_key=${config.apiKey}`);
 	
-	ws.on('connect', function(){
+	ws.onopen = (event) => {
 		
-		console.log('Connected!');
+		console.log('API Connected!');
 		setStatus(API_STATUS.CONNECTED);
+
+		callback && callback();
 
 		if(0 < subscriptions.size) {
 			console.log('Re-subscribing to streams...');
-			subscriptions.forEach((callback, subKey) => ws.emit('SubAdd', { subs: [subKey] }));
+			subscriptions.forEach((callback, symbol) => addSubscription(symbol));
 		}
-	});
+	};
 
-	ws.on('event', function(data){
-		console.log('Received event:');
-		console.dir(data);
-	});
-
-	ws.on('disconnect', function(){
-		console.log('Disconnected :(');
+	ws.onclose = (event) => {
+		console.log('API Disconnected :(');
 		setStatus(API_STATUS.DISCONNECTED);
-	});
+	};
+
+	ws.onerror = (error) => {
+		console.error('API Error:');
+		console.dir(error);
+		setStatus(API_STATUS.ERROR);
+	};
 
 	// Listen for data
-	ws.on('m', data => {
-		// Decode message using crypto compare's util function
-		if (data.substring(0, data.indexOf("~")) === QUOTE_TYPE) {
-			// Extract subscription signature from data
-			let subKey = CCC.CURRENT.getKeyFromStreamerData(data);
-			// Call subscription-specific callback w/ update
-			subscriptions.get(subKey).forEach(callback => callback(CCC.CURRENT.unpack(data)));
+	ws.onmessage = (message) => {
+
+		const data = JSON.parse(message.data);
+
+		// There are various handshake-type messages we can just ignore
+		if(data.TYPE === MESSAGE_TYPE_DATA) {
+			subscriptions.get(data.FROMSYMBOL).forEach(callback => callback(data));
 		}
-	});
+	};
 
 	initialized = true;
-
-	callback && callback();	
 }
+
 
 function setStatus(status) {
 	apiStatus = status;
 	statusListeners.forEach(callback => callback(status));
 }
+
+
+function websocketSend(obj) {
+	if(apiConnected()) {
+		ws.send(JSON.stringify(obj));
+	}
+	else {
+		throw `Cannot send websocket message, status is ${getApiStatus()}. Message was: ${JSON.stringify(obj)}`
+	}
+}
+
 
 export { addApiStatusListener, apiInit, apiSubscribe, getApiStatus, getTokenInfo };

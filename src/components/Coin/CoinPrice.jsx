@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import CCC from 'api/CryptoCompare/vendor.js';
 
 class CoinPrice extends Component {
 
@@ -9,7 +8,7 @@ class CoinPrice extends Component {
 		const price = this.props.price;
 		const denomination = this.props.denomination;
 		const priceHistory = this.props.priceHistory;
-		const symbol = CoinPrice.SIGNS[denomination];
+		const symbol = '$';
 
 		const tooltip = Object.keys(priceHistory).reduce((title, timestamp) => {
 			return title + timestamp + ': ' + priceHistory[timestamp] + '\n';
@@ -28,7 +27,7 @@ class CoinPrice extends Component {
 CoinPrice.INCREASING = 1;
 CoinPrice.DECREASING = 2;
 CoinPrice.UNCHANGED = 4;
-CoinPrice.SIGNS = CCC.STATIC.CURRENCY.SYMBOL;
+CoinPrice.SIGNS = 'CG todo';//CCC.STATIC.CURRENCY.SYMBOL;
 
 CoinPrice.changeTypes = [
 	null,

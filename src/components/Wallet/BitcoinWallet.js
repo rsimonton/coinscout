@@ -11,22 +11,29 @@ export default class BitcoinWallet extends Wallet {
 	constructor(props) {
 		super(props);
 		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
-		getWalletInfo(this.props.address, this.handleWalletLoaded);			
+		
+		getWalletInfo(this.props.address, this.handleWalletLoaded);
+		
+		window.setInterval(
+			() => getWalletInfo(this.props.address, this.handleWalletLoaded),
+			this.REFRESH_INTERVAL
+		);	
 	}
 
 	handleWalletLoaded(balance) {
 
 		console.log('Loaded Bitcoin address ' + this.props.address);
 	
-		const tokenInfo = this.getTokenInfo('BTC');
+		this.getTokenInfo('BTC', tokenInfo => {
 
-		tokenInfo && this.addToken(
-			tokenInfo.CoinName,
-			tokenInfo.Name,
-			tokenInfo.ImageUrl,
-			// Convert from sats to btc
-			balance / 100000000
-		);
+			tokenInfo && this.addToken(
+				tokenInfo.CoinName,
+				'BTC',
+				tokenInfo.ImageUrl,
+				// Convert from sats to btc
+				balance / 100000000
+			);
+		});
 
 		this.props.onWalletLoaded && this.props.onWalletLoaded(this);
 	}

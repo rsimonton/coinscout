@@ -46,6 +46,8 @@ class SettingsPanel extends Component {
 							data-setting="marketCapSite"
 							onChange={this.handleChange}
 							value={marketCapSite}>
+								<option>CoinGecko</option>
+								<option>CoinPaprika</option>
 								<option>CoinMarketCap</option>
 								<option>CryptoCompare</option>
 								<option>LiveCoinWatch</option>

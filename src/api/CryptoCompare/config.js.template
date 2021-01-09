@@ -1,0 +1,6 @@
+//
+// https://www.cryptocompare.com/cryptopian/api-keys
+//
+export default {
+	"apiKey": ""
+}

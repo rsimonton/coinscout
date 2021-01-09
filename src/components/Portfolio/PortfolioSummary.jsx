@@ -22,7 +22,8 @@ export default class PortfolioSummary extends Component {
 				return total;
 			}
 
-			const coinCount = coin.stack.reduce((stack, source) => stack + source.balance, 0);
+			//const coinCount = coin.stack.reduce((stack, source) => stack + source.balance, 0);
+			const coinCount = Object.values(coin.stack).reduce((a, b) => a + b, 0);
 			
 			return total + (coinCount * coinPrices[coin.symbol]);
 		}, 0);

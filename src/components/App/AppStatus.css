@@ -20,9 +20,13 @@
 }
 
 .App-status.disconnected .indicator {
-	background-color: red;
+	background-color: gray;
 }
 
 .App-status.connecting .indicator {
 	background-color: yellow;
+}
+
+.App-status.error .indicator {
+	background-color: red;
 }

@@ -12,8 +12,8 @@ export default class Coin extends Component {
 	constructor(props) {
 		super(props);
 
-		this.symbol = this.props.symbol;	// need a permanent reference
-
+		this.formatter = this.props.formatters.USD;
+		
 		this.lastPrice = NaN;
 
 		this.priceChangeLast = CoinPrice.changeTypes[CoinPrice.UNCHANGED];	
@@ -21,6 +21,7 @@ export default class Coin extends Component {
 
 		this.state = {
 			invalid: true,
+			priceUpdates: 0,
 			weight: 0
 		};
 
@@ -31,6 +32,7 @@ export default class Coin extends Component {
 	}
 
 	componentDidMount() {
+		
 		const subscribed = apiSubscribe(
 			this.props.symbol,
 			this.handleData
@@ -53,7 +55,6 @@ export default class Coin extends Component {
 		}
 
 		const priceStr = priceRaw ? priceRaw.toString() : '';
-		const flags = parseInt(this.state.FLAGS, 10);
 		const denomination = nextProps.denomination;		
 		const precisionRaw = nextProps.pricePrecision;
 		
@@ -73,12 +74,12 @@ export default class Coin extends Component {
 		const priceUnchanged = priceNormalized === parseFloat(this.state.price).toFixed(pricePrecision);
 		const priceChangeThis = priceUnchanged
 			? this.state.priceChange
-			: CoinPrice.changeTypes[flags];
+			: this.state.priceChange; // CoinPrice.changeTypes[flags]; -- CoinGecko todo
 
 		//console.log('change: ' + flags + ' = ' + priceChangeThis);
 		const newWeight = priceUnchanged
 			? this.state.weight
-			: this.state.weight + (flags === CoinPrice.INCREASING ? 1 : -1);
+			: this.state.weight; // + (flags === CoinPrice.INCREASING ? 1 : -1); -- CoinGecko todo (but not used?)
 
 		// Keep track of last price change
 		this.priceChangeLast = priceChangeThis;
@@ -108,6 +109,9 @@ export default class Coin extends Component {
 		let link = false;
 
 		switch(this.props.marketCapSite) {
+			case 'CoinGecko':
+				link = `https://www.coingecko.com/en/coins/${this.props.name.toLowerCase().replace(/ /g, '-')}/`;
+				break;
 			case 'CoinMarketCap':
 				link = 'https://coinmarketcap.com/currencies/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
 				break;
@@ -119,6 +123,9 @@ export default class Coin extends Component {
 				break;
 			case 'Messari':
 				link = 'https://messari.io/asset/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
+				break;
+			case 'CoinPaprika':
+				link = `https://coinpaprika.com/coin/${this.props.symbol.toLowerCase()}-${this.props.name.toLowerCase().replace(/ /g, '-')}/`;
 				break;
 			default:
 				console.log('No "marketCapSite" config item set, ignoring coin click');
@@ -136,7 +143,7 @@ export default class Coin extends Component {
 			return;
 		}
 
-		this.setState(data, function() {
+		this.setState(data,  function() {
 			this.props.onData(data)
 		});
 	}
@@ -158,32 +165,42 @@ export default class Coin extends Component {
 	}
 
 	render() {
-		//console.log('his.props);
+		
+		//console.dir(this.props);
 
-		const {denomination, label, name, pricePrecision, icon, stack, symbol, ...props} = this.props;
-		const invalid = this.state.invalid;
-		const priceChange = this.state.priceChange;
-		const price = this.state.price;
-		const weight = this.state.weight;
-		const className = `Coin Coin-${symbol} ${invalid ? ' Coin-invalid' : ''}`;
+		const {denomination, formatters, label, name, pricePrecision, icon, stack, symbol, url, ...props} = this.props,
+			  invalid = this.state.invalid,
+			  priceChange = this.state.priceChange,
+			  price = this.state.price,
+			  weight = this.state.weight,
+			  className = `Coin Coin-${symbol} ${invalid ? ' Coin-invalid' : ''}`,
+			  priceUpdates = Object.keys(this.priceHistory).length + 1;
 
 		if(price !== this.lastPrice) {
 			this.lastPrice = price;
 			this.priceHistory[new Date().getTime()] = price;
 		}
 
+		//console.log(name + ': ' + Object.keys(this.priceHistory).length + ' updates');
+		
 		return (
 			<div className={className} data-weight={weight} onClick={this.handleClick}>
 				<CoinHideButton onClick={this.handleHide} />
-				<CoinLabel name={name} label={label} icon={icon} />
+				<CoinLabel
+					name={name}
+					label={label}
+					icon={icon}
+					priceUpdates={priceUpdates}
+					url={url} />
 				<CoinPrice
 					change={priceChange}
 					price={price}
 					denomination={denomination}
 					priceHistory={this.priceHistory} />
 				<CoinStack
+					formatters={formatters}
 					onValueChange={this.handleStackValueChange}
-					symbol={this.symbol}
+					symbol={symbol}
 					price={price}
 					stack={stack} 
 					{...props} />				

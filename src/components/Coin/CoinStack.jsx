@@ -4,6 +4,7 @@ class CoinStack extends Component {
 	
 	constructor(props) {
 		super(props);
+		this.formatter = this.props.formatters.USD;
 		this.state = {};
 	}
 	
@@ -17,13 +18,12 @@ class CoinStack extends Component {
 
 		const symbol = nextProps.symbol;
 		const price = nextProps.price;
-		const stack = nextProps.stack || [];
+		const stack = nextProps.stack || {};
 		const breakdown = {};
 		
 		// Prices always USD for now
 		const precision = 2;
-		const sign = '$';
-
+		
 		// Max stack decimals for non-whole integer stack counts
 		const stackDecimals = 3;
 		// Number of digits total to display for coin total
@@ -31,21 +31,31 @@ class CoinStack extends Component {
 
 		let count = 0, balanceFormatted;
 
+		/*
 		// Sort by balance, decreasing
-		if(stack) {
-			stack.sort((a, b) => a.balance < b.balance ? 1 : (a.balance === b.balance ? 0 : -1));
+		stack.sort((a, b) => a.balance < b.balance ? 1 : (a.balance === b.balance ? 0 : -1));
 
-			stack.forEach(entry => {
-				balanceFormatted = entry.balance === Math.floor(entry.balance)
-					? entry.balance
-					: entry.balance.toFixed(stackDecimals);
+		stack.forEach(entry => {
+			balanceFormatted = entry.balance === Math.floor(entry.balance)
+				? entry.balance
+				: entry.balance.toFixed(stackDecimals);
 
-				// Source total, formatted
-				breakdown[entry.source] = balanceFormatted;
-				// Cummulative total
-				count += parseFloat(entry.balance);
-			});
-		}
+			// Source total, formatted
+			breakdown[entry.source] = balanceFormatted;
+			// Cummulative total
+			count += parseFloat(entry.balance);
+		});
+		*/
+		Object.keys(stack).forEach(source => {
+			balanceFormatted = stack[source] === Math.floor(stack[source])
+				? stack[source]
+				: stack[source].toFixed(stackDecimals);
+
+			// Source total, formatted
+			breakdown[source] = balanceFormatted;
+			// Cummulative total
+			count += parseFloat(stack[source]);
+		});
 
 		// Determine how many decimal places we should display based on the 'digits'
 		// const. If digits === 5, coin totals will display 5 digits, e.g.:
@@ -60,7 +70,6 @@ class CoinStack extends Component {
 			breakdown: breakdown,
 			count: count === Math.floor(count) ? count : count.toFixed(countDecimals),
 			symbol: symbol,
-			sign: sign,
 			value: parseFloat(count * price).toFixed(precision)
 		}, () => nextProps.onValueChange && nextProps.onValueChange(this.state.value));
 	}
@@ -72,9 +81,9 @@ class CoinStack extends Component {
 		*/
 		const breakdown = this.state.breakdown;
 		const count = this.state.count;
+		const countFormatted = Intl.NumberFormat().format(count);
 		const symbol = this.state.symbol;
-		const sign = this.state.sign;
-		const value = this.state.value;
+		const value = this.formatter.format(this.state.value);
 
 		// We overload the show/hide stack/balance setting - if 'count' is zero, hide them
 		const showBalances = this.props.settings.showBalances && count > 0;
@@ -90,8 +99,8 @@ class CoinStack extends Component {
 
 		return (
 			<div className={'Coin-stack'}>
-				{showStack && <span className='Coin-stack-count' title={tooltip}>{count} {symbol}</span>}
-				{showBalances && <span className='Coin-stack-value'>{sign}{value}</span>}
+				{showStack && <span className='Coin-stack-count' title={tooltip}>{countFormatted} {symbol}</span>}
+				{showBalances && <span className='Coin-stack-value'>{value}</span>}
 			</div>
 		);
 	}

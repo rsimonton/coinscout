@@ -8,23 +8,28 @@ import config from './config.js';
 // see:  https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API?from=etop
 const API_ENDPOINT = 'https://api.ethplorer.io',
 	API_KEY = config.apiKey,
-	ENDPOINT_WALLET_INFO = `${API_ENDPOINT}/getAddressInfo`,
+	ENDPOINT_TOKEN_INFO = 'getTokenInfo',
+	ENDPOINT_WALLET_INFO = 'getAddressInfo',
 	REQUEST_QUEUE = [],
 	THROTTLE_INTERVAL = 200; // millis - avoid 429s @ Ethplorer.io
 
 // Just syntactic sugar
-const get = (walletAddress) => fetch(`${ENDPOINT_WALLET_INFO}/${walletAddress}/?apiKey=${API_KEY}`);
-// Main method - accept and queue address requests
-const getWalletInfo = (address, callback) => REQUEST_QUEUE.unshift({address, callback});
+const get = (uri) => fetch(`${uri}?apiKey=${API_KEY}`);
+
+// Accept and queue token info requests
+const getTokenInfo = (address, callback) => REQUEST_QUEUE.unshift({endpoint: ENDPOINT_TOKEN_INFO, address, callback});
+
+// Accept and queue address requests
+const getWalletInfo = (address, callback) => REQUEST_QUEUE.unshift({endpoint: ENDPOINT_WALLET_INFO, address, callback});
 
 // Throttle by pulling request from queue @ given interval
 setInterval(() => {
 	let request = REQUEST_QUEUE.pop();
 	
-	request && get(request.address)
+	request && get(`${API_ENDPOINT}/${request.endpoint}/${request.address}/`)
 		.then(res => res.json())
 		.then(json => request.callback(json));
 
 }, THROTTLE_INTERVAL);
 
-export { getWalletInfo };
+export { getTokenInfo, getWalletInfo };

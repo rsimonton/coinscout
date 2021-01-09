@@ -55,31 +55,21 @@ class App extends Component {
 		coinConfig.portfolio.forEach(coin => {
 			// Restructuring coin.stack here - consider doing this in config itself.
 			// e.g. { BitTrex: 30 } ---> [ { source:BitTrex, balance: 30} ]
-			const tokenInfo = getTokenInfo(coin.symbol);
+			getTokenInfo(coin.symbol, tokenInfo => {
 
-			if(tokenInfo) {
-				let stack = [];
-
-				Object.keys(coin.stack).forEach(source => {
-					stack.push({
-						source: source,
-						balance: coin.stack[source]
-					});
-				});
-
-				coin.stack = stack;
-
-				coins[coin.symbol] = {
-					name: tokenInfo.CoinName,
-					symbol: coin.symbol,
-					icon: tokenInfo.ImageUrl,
-					stack: stack,
-					weight: 0
-				};
-			}
-			else {
-				console.warn('Ignoring unkown token in app config file: ' + coin.symbol);
-			}
+				if(tokenInfo) {
+					coins[coin.symbol] = {
+						name: tokenInfo.CoinName,
+						symbol: coin.symbol,
+						icon: tokenInfo.ImageUrl,
+						stack: coin.stack,
+						weight: 0
+					};
+				}
+				else {
+					console.warn('Ignoring unkown token in app config file: ' + coin.symbol);
+				}
+			});
 		});
 
 		// Initialize state, extending default settings w/ cached user settings
@@ -217,14 +207,17 @@ class App extends Component {
 		//
 		// https://reactjs.org/docs/react-component.html#setstate
 		//
-		this.setState((currentState) => {
+		this.setState(currentState => {
 
 			const coins = currentState.coins;				  
 
-			wallet.getTokens().forEach(token => {
+			// getTokens() returns a map of symbol => data
+			Object.values(wallet.getTokens()).forEach(token => {
 				if(coins[token.symbol]) {
 					// We're already tracking this token, just update stack
-					coins[token.symbol].stack = coins[token.symbol].stack.concat(token.stack);					
+					//coins[token.symbol].stack = coins[token.symbol].stack.concat(token.stack);
+					// Update or set the stack for the token (handling periodic auto-refreshes properly)
+					Object.assign(coins[token.symbol].stack, token.stack);		
 				}
 				else {
 					coins[token.symbol] = token;
