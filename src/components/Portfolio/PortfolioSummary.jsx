@@ -18,7 +18,8 @@ export default class PortfolioSummary extends Component {
 		const portfolioValue = Object.keys(coins).reduce((total, symbol) => {
 			let coin = coins[symbol];
 
-			if(undefined === coinPrices[coin.symbol]) {
+			// We do not include hidden tokens' balances in portfolio balance
+			if(undefined === coinPrices[coin.symbol] || true === coin.hidden) {
 				return total;
 			}
 

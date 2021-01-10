@@ -175,7 +175,18 @@ class App extends Component {
 	handleHide(coinProps) {
 		let hidden = this.state.settings.hidden || [];
 		hidden.push(coinProps.symbol);
-		this.handleSettingsChange({hidden});
+
+		this.setState(
+			// Update based on current statue
+			state => {
+				state.coins[coinProps.symbol].hidden = true;
+				return state;
+			},
+			// Callback after state update
+			() => {
+				this.handleSettingsChange({hidden});
+			}
+		);
 	}
 
 	/**

@@ -4,6 +4,7 @@ import config from './config.js';
 const API_ENDPOINT_CORS = 'https://min-api.cryptocompare.com/data/',
 	IMAGE_URL_BASE = 'https://cryptocompare.com',
 	MESSAGE_TYPE_DATA = '5', // must be a String
+	MESSAGE_TYPE_ERROR = '500',
 	STREAMING_ENDPOINT = 'wss://streamer.cryptocompare.com/v2',
 	API_STATUS = {
 		CONNECTING: 'Connecting',
@@ -27,17 +28,6 @@ let	apiStatus = API_STATUS.DISCONNECTED,
 
 function addApiStatusListener(callback) {
 	statusListeners.push(callback);
-}
-
-
-function addSubscription(tokenSymbol) {
-
-	let subKey = buildSubKey(tokenSymbol);
-
-	websocketSend({
-		action: 'SubAdd',
-		subs: [subKey]
-	});
 }
 
 
@@ -68,7 +58,7 @@ function apiInit(callback) {
 				tokenInfo[symbol] = data;
 			});
 
-			console.log(`Loaded ${Object.keys(tokenInfo).length} tokens from CryptoCompare`);
+			log(`Loaded ${Object.keys(tokenInfo).length} tokens from CryptoCompare`);
 
 			initWebsocket(callback);
 		})
@@ -78,12 +68,7 @@ function apiInit(callback) {
 }
 
 
-function buildSubKey(symbol) {
-	return `${MESSAGE_TYPE_DATA}~CCCAGG~${symbol}~USD`.toUpperCase();
-}
-
-
-function apiSubscribe(symbol, callback) {
+function apiSubscribe(symbol, callbackData, callbackError) {
 	
 	if(!initialized) {
 		throw new Error('api.js -- you must call apiInit before calling apiSubscribe');
@@ -92,24 +77,19 @@ function apiSubscribe(symbol, callback) {
 	const tokenInfo = getTokenInfo(symbol);
 
 	if(!tokenInfo) {
-		console.error('No coin ID found for symbol: ' + symbol);
+		error('No coin ID found for symbol: ' + symbol);
 		return false;
 	}
 
-	console.log('Adding coin subscription: ' + symbol);
-
-	// Store reference to subscription-specific callback
-	const subscribed = subscriptions.has(symbol);
-	
-	subscribed || subscriptions.set(symbol, []);
-
-	// Even if already subscribed, add the additional callback
-	subscriptions.get(symbol).push(callback);
-
-	subscribed || addSubscription(symbol);
+	subscriptionAdd(symbol, callbackData, callbackError);
 
 	// Indicate success
 	return true;
+}
+
+
+function buildSubKey(symbol) {
+	return `${MESSAGE_TYPE_DATA}~CCCAGG~${symbol}~USD`.toUpperCase();
 }
 
 
@@ -133,24 +113,24 @@ function initWebsocket(callback) {
 	
 	ws.onopen = (event) => {
 		
-		console.log('API Connected!');
+		log('API Connected!');
 		setStatus(API_STATUS.CONNECTED);
 
 		callback && callback();
 
 		if(0 < subscriptions.size) {
-			console.log('Re-subscribing to streams...');
-			subscriptions.forEach((callback, symbol) => addSubscription(symbol));
+			log('Re-subscribing to streams...');
+			//subscriptions.forEach((callbacks, symbol) => subscriptionRefresh(symbol));
 		}
 	};
 
 	ws.onclose = (event) => {
-		console.log('API Disconnected :(');
+		log('API Disconnected :(');
 		setStatus(API_STATUS.DISCONNECTED);
 	};
 
 	ws.onerror = (error) => {
-		console.error('API Error:');
+		error('API Error:');
 		console.dir(error);
 		setStatus(API_STATUS.ERROR);
 	};
@@ -162,7 +142,29 @@ function initWebsocket(callback) {
 
 		// There are various handshake-type messages we can just ignore
 		if(data.TYPE === MESSAGE_TYPE_DATA) {
-			subscriptions.get(data.FROMSYMBOL).forEach(callback => callback(data));
+			subscriptions.get(data.FROMSYMBOL).forEach(callbacks => callbacks.data(data));
+		}
+		else if(data.TYPE === MESSAGE_TYPE_ERROR) {
+			if(data.MESSAGE === 'SUBSCRIPTION_ALREADY_ACTIVE') {
+				// Ignore, this isn't an error pragmatically speaking
+			}
+			else {
+				// 'PARAMETER' is the subscription signature, e.g. 5~CCCAGG~OM~USD
+				const error = `${data.MESSAGE}: ${data.INFO}`,
+					  symbol = data.PARAMETER.split('~')[2];
+
+				// 
+				if(subscriptions.has(symbol)) {
+					// Save reference to error callbacks because subscriptionRemove unsets them,
+					// and we want to remove the subscription before we call the callbacks
+					const errorCallbacks = subscriptions.get(symbol).map(callbacks => callbacks.error);
+
+					// Remove - we don't want further updates wrt this token
+					subscriptionRemove(symbol);
+
+					errorCallbacks.forEach(callback => callback(error));
+				}
+			}
 		}
 	};
 
@@ -170,9 +172,63 @@ function initWebsocket(callback) {
 }
 
 
+function error(str) {
+	console.error(`CryptoCompare API: ${str}`);
+}
+
+
+function log(str) {
+	console.log(`CryptoCompare API: ${str}`);
+}
+
+
 function setStatus(status) {
 	apiStatus = status;
 	statusListeners.forEach(callback => callback(status));
+}
+
+
+function subscriptionAdd(symbol, callbackData, callbackError) {
+	
+	const subscribed = subscriptions.has(symbol);
+
+	subscribed || log('Adding coin subscription: ' + symbol);
+	subscribed || subscriptions.set(symbol, []);
+
+	// Even if already subscribed, add the additional callbacks
+	subscriptions.get(symbol).push({
+		data: callbackData,
+		error: callbackError
+	});
+
+	subscribed || subscriptionUpdate(symbol, 'SubAdd');
+}
+
+
+function subscriptionRefresh(symbol) {
+	// This function's called when subscription callbacks are already
+	// registered and we just want to start getting updates for the
+	// symbol again (e.g. after a network drop/reconnect)
+	subscriptionUpdate(symbol, 'SubAdd');
+}
+
+
+function subscriptionRemove(symbol) {
+	// Unsubscribe from API
+	subscriptionUpdate(symbol, 'SubRemove');
+	// Remove from our local map of subscriptions/callbacks
+	subscriptions.delete(symbol);	
+}
+
+
+function subscriptionUpdate(symbol, action) {
+	
+	let subKey = buildSubKey(symbol);
+
+	websocketSend({
+		action: action,
+		subs: [subKey]
+	});
 }
 
 

@@ -19,12 +19,6 @@ let initializedSubsCount = 0,
 	statusListeners = [],
 	subscriptions = new Map();
 
-// Helper method attempts to generate a unique identifier for each token
-// based on its symbol and name. This was required due to shortcoming of
-// Coingecko's API in available ways to disambiguate tokens with the same
-// symbol (in our specific case, UNI)
-const getTokenKey = (symbol, name) => `${symbol}~${name}`.toLowerCase();
-
 function addApiStatusListener(callback) {
 	statusListeners.push(callback);
 }
@@ -45,7 +39,7 @@ function getServerStatus() {
 function apiInit(callback) {
 
 	if(initialized) {
-		console.error('Cannot call apiInit more than once');
+		error('Cannot call apiInit more than once');
 		return false;
 	}
 
@@ -67,7 +61,7 @@ function apiInit(callback) {
 		.then(response => response.json())
 		.then(coins => {
 			// Map symbol to API internal ID
-			coins.forEach(coin => tokenIds[getTokenKey(coin.symbol, coin.name)] = coin.id);
+			coins.forEach(coin => tokenIds[normalizeSymbol(coin.symbol)] = coin.id);
 
 			initialized = true;
 			callback && callback();	
@@ -78,26 +72,27 @@ function apiInit(callback) {
 }
 
 
-function apiSubscribe(symbol, name, callback) {
+function apiSubscribe(symbol, callbackData, callbackError) {
 	
 	if(!initialized) {
 		throw new Error('api.js -- you must call apiInit before calling apiSubscribe');
 	}
 
-	let tokenKey = getTokenKey(symbol,  name);
-	
-	if(!tokenIds[tokenKey]) {
-		console.error('No coin found for token key: ' + tokenKey);
+	if(!tokenIds[symbol]) {
+		error('No coin found for symbol: ' + symbol);
 		return false;
 	}
 
-	console.log('Adding coin subscription: ' + tokenKey);
+	log('Adding coin subscription: ' + symbol);
 
 	// Store reference to subscription-specific callback - allowing for multiple subs to same symbol
-	subscriptions.has(tokenKey) || subscriptions.set(tokenKey, []);
-	subscriptions.get(tokenKey).push(callback);
+	subscriptions.has(symbol) || subscriptions.set(symbol, []);
+	subscriptions.get(symbol).push({
+		data: callbackData,
+		error: callbackError
+	});
 
-	window.setInterval(() => updateSubscription(symbol, name), INTERVAL_UPDATE_SUBSCRIPTION);
+	window.setInterval(() => updateSubscription(symbol), INTERVAL_UPDATE_SUBSCRIPTION);
 
 	// Indicate success
 	return true;
@@ -109,14 +104,13 @@ function getApiStatus() {
 }
 
 
-function getTokenInfo(symbol, name, callback) {
+function getTokenInfo(symbol, callback) {
 
-	let tokenKey = getTokenKey(symbol, name),
-		token = tokenInfo[tokenKey],
-		coinGeckoId = tokenIds[tokenKey];
+	let token = tokenInfo[symbol],
+		coinGeckoId = tokenIds[symbol];
 
 	if(!coinGeckoId) {
-		//console.warn(`No CoinGecko data found for token '${symbol}', ignoring`);
+		error(`No CoinGecko data found for token '${symbol}', ignoring`);
 		callback(false);
 	}
 	else if(token) {
@@ -132,16 +126,31 @@ function getTokenInfo(symbol, name, callback) {
 				//
 				token = {
 					CoinName: data.name,
-					ImageUrl: data.image.thumb, // other sizes available
+					ImageUrl: data.image.thumb, 	// other sizes available
 					Symbol: symbol
 				};
 
 				// Return copy
-				tokenInfo[getTokenKey(symbol, data.name)] = Object.assign({}, token);
+				tokenInfo[symbol] = Object.assign({}, token);
 
 				callback(token);
 			});
 	}
+}
+
+
+function error(str) {
+	console.error(`CoinGecko API: ${str}`);
+}
+
+function log(str) {
+	console.log(`CoinGecko API: ${str}`);
+}
+
+
+// Our app uses uppers, CoinGecko doesn't - need to fix that
+function normalizeSymbol(symbol) {
+	return symbol.toUpperCase();
 }
 
 
@@ -150,10 +159,9 @@ function setStatus(status) {
 	statusListeners.forEach(callback => callback(status));
 }
 
-function updateSubscription(symbol, name) {
+function updateSubscription(symbol) {
 
-	const tokenKey = getTokenKey(symbol, name),
-		tokenId = tokenIds[tokenKey];
+	const tokenId = tokenIds[symbol];
 
 	fetchUri(`/simple/price?ids=${tokenId}&vs_currencies=usd`)
 		.then(response => response.json())
@@ -164,8 +172,11 @@ function updateSubscription(symbol, name) {
 				TOSYMBOL: 'USD',
 				PRICE: data[tokenId].usd
 			};
-			subscriptions.get(tokenKey).forEach(callback => callback(hack));
-		});
+			subscriptions.get(symbol).forEach(callbacks => callbacks.data(hack));
+		})
+		.catch(error => {
+			subscriptions.get(symbol).forEach(callbacks => callbacks.error(error));	
+		})
 }
 
 export { addApiStatusListener, apiInit, apiSubscribe, getApiStatus, getTokenInfo };

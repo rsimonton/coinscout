@@ -3,7 +3,8 @@ import CoinLabel from './CoinLabel.jsx';
 import CoinPrice from './CoinPrice.jsx';
 import CoinStack from './CoinStack.jsx';
 
-import { apiSubscribe } from 'api/CryptoCompare/api.js';
+import { apiSubscribe as websocketApi } from 'api/CryptoCompare/api.js';
+import { apiSubscribe as restApi } from 'api/CoinGecko/api.js';
 
 import './Coin.css';
 
@@ -13,36 +14,44 @@ export default class Coin extends Component {
 		super(props);
 
 		this.formatter = this.props.formatters.USD;
-		
 		this.lastPrice = NaN;
-
 		this.priceChangeLast = CoinPrice.changeTypes[CoinPrice.UNCHANGED];	
 		this.priceHistory = {};
 
 		this.state = {
-			invalid: true,
+			api: websocketApi,	// Try websockets first
 			priceUpdates: 0,
+			invalid: true,
+			subscribed: false,
 			weight: 0
 		};
 
+		this.apiSubscribe = this.apiSubscribe.bind(this);
 		this.handleClick = this.handleClick.bind(this);
-		this.handleData = this.handleData.bind(this);
+		this.handleApiData = this.handleApiData.bind(this);
+		this.handleApiError = this.handleApiError.bind(this);
 		this.handleHide = this.handleHide.bind(this);
 		this.handleStackValueChange = this.handleStackValueChange.bind(this);		
 	}
 
-	componentDidMount() {
-		
-		const subscribed = apiSubscribe(
+	// This intentional name collision is ridiculous lol
+	apiSubscribe() {
+
+		const subscribed = this.state.api(
 			this.props.symbol,
-			this.handleData
+			this.handleApiData,
+			this.handleApiError
 		);
 
-		const newState = {subscribed: true};
+		const newState = { subscribed };
 
-		this.state.invalid && this.state.priced && (newState.invalid = false);
+		this.state.price && (newState.invalid = subscribed === true);
 
 		this.setState(newState);
+	}
+
+	componentDidMount() {
+		this.apiSubscribe();
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -86,8 +95,8 @@ export default class Coin extends Component {
 
 		const newState = {};
 
-		// we have a price, so we're valid now unless still not subscribed
-		this.state.invalid && this.state.subscribed && (newState.invalid = false);
+		// We have a price, so we're valid now unless still not subscribed
+		this.state.subscribed && (newState.invalid = false);
 		
 		priceUnchanged || Object.assign(newState, {
 			price: priceNormalized,
@@ -134,7 +143,7 @@ export default class Coin extends Component {
 		link && window.open(link);
 	}
 
-	handleData(data) {
+	handleApiData(data) {
 		//console.dir(data);
 
 		// 'data' is null if API subscription attempt returned no data. Hide the symbol
@@ -143,9 +152,35 @@ export default class Coin extends Component {
 			return;
 		}
 
-		this.setState(data,  function() {
+		this.setState(data, function() {
 			this.props.onData(data)
 		});
+	}
+
+	handleApiError(error) {
+		
+		const newState = {
+			invalid: true,
+			subscribed: false
+		};
+
+		if(this.state.api === websocketApi) {
+			console.error(`Coin ${this.props.symbol} - websocket error: ${error} -- falling back to REST API`);
+			
+			newState.api = restApi;
+			
+			this.setState(newState, function() {
+				this.apiSubscribe()
+			});
+		}
+		else {
+			console.error(`Coin ${this.props.symbol} - REST error: ${error} -- giving up`);
+			
+			// Oh sure why not
+			newState.api = null;
+
+			this.setState(newState);
+		}
 	}
 
 	handleHide(event) {
@@ -169,12 +204,16 @@ export default class Coin extends Component {
 		//console.dir(this.props);
 
 		const {denomination, formatters, label, name, pricePrecision, icon, stack, symbol, url, ...props} = this.props,
+			  api = this.state.api,
 			  invalid = this.state.invalid,
 			  priceChange = this.state.priceChange,
 			  price = this.state.price,
 			  weight = this.state.weight,
-			  className = `Coin Coin-${symbol} ${invalid ? ' Coin-invalid' : ''}`,
 			  priceUpdates = Object.keys(this.priceHistory).length + 1;
+
+		const coinApiClass = null === api ? '' : `Coin-${websocketApi === api ? 'websocket' : 'rest'}`,
+			  coinValidityClass = `Coin-${invalid ? 'invalid' : 'valid'}`,
+			  coinClass = `Coin Coin-${symbol} ${coinApiClass} ${coinValidityClass}`;
 
 		if(price !== this.lastPrice) {
 			this.lastPrice = price;
@@ -184,7 +223,7 @@ export default class Coin extends Component {
 		//console.log(name + ': ' + Object.keys(this.priceHistory).length + ' updates');
 		
 		return (
-			<div className={className} data-weight={weight} onClick={this.handleClick}>
+			<div className={coinClass} data-weight={weight} onClick={this.handleClick}>
 				<CoinHideButton onClick={this.handleHide} />
 				<CoinLabel
 					name={name}
