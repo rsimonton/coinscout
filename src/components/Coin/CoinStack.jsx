@@ -12,7 +12,7 @@ class CoinStack extends Component {
 		// I'm being lazy here - price sometimes comes in as NaN and I haven't
 		// been able to trace it back to its source. And it's late. So here's 
 		// an if-check to prevent the UI from surfacing 'NaN' in those cases :/
-		if(Number.isNaN(nextProps.price)) {
+		if(Number.isNaN(parseFloat(nextProps.price)) || (nextProps.price === this.state.price && nextProps.stack === this.state.stack)) {
 			return;
 		}
 
@@ -76,7 +76,7 @@ class CoinStack extends Component {
 
 	render() {
 		/*
-		console.log('CoinStack props:');
+		coinscout.log(`${this.props.symbol} CoinStack props:`);
 		console.dir(this.props);
 		*/
 		const breakdown = this.state.breakdown;
@@ -99,7 +99,7 @@ class CoinStack extends Component {
 
 		return (
 			<div className={'Coin-stack'}>
-				{showStack && <span className='Coin-stack-count' title={tooltip}>{countFormatted} {symbol}</span>}
+				{showStack && <span className='Coin-stack-count' title={tooltip}>{countFormatted}</span>}
 				{showBalances && <span className='Coin-stack-value'>{value}</span>}
 			</div>
 		);

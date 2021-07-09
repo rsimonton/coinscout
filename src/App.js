@@ -3,12 +3,15 @@ import React, { Component } from 'react';
 import AppStatus from './components/App/AppStatus';
 import Coin from './components/Coin/Coin.jsx';
 import Coins from './components/Coins/Coins.jsx';
+import Metamask from './components/Ethereum/Metamask.jsx';
 import AionWallet from './components/Wallet/AionWallet.js';
 import BitcoinWallet from './components/Wallet/BitcoinWallet.js';
 import Erc20Wallet from './components/Wallet/Erc20Wallet.js';
 import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
 import SettingsPanel from './components/Settings/SettingsPanel.jsx';
-import { addApiStatusListener, getApiStatus, getTokenInfo } from './api/CryptoCompare/api.js';
+import { addApiStatusListener, getApiStatus } from './api/CryptoCompare/api.js';
+import { getTokenInfo } from 'api/ApiProxy.js';
+import { utils as coinscout } from 'util/Utils.js';
 
 //import ApiManager from 'api/ApiManager.js';
 //import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
@@ -31,6 +34,7 @@ class App extends Component {
 
 		//this.apiManager = new ApiManager();		
 		
+		this.dustThreshold = appConfig.dustThreshold;	// dollars
 		this.normalizeValues = appConfig.normalizeValues;
 		this.pricePrecision = appConfig.pricePrecision;
 		this.rawPrices = { USD: 1 };
@@ -55,19 +59,26 @@ class App extends Component {
 		coinConfig.portfolio.forEach(coin => {
 			// Restructuring coin.stack here - consider doing this in config itself.
 			// e.g. { BitTrex: 30 } ---> [ { source:BitTrex, balance: 30} ]
-			getTokenInfo(coin.symbol, tokenInfo => {
+			getTokenInfo(coin.symbol).then(tokenInfo => {
 
 				if(tokenInfo) {
-					coins[coin.symbol] = {
-						name: tokenInfo.CoinName,
-						symbol: coin.symbol,
-						icon: tokenInfo.ImageUrl,
-						stack: coin.stack,
-						weight: 0
-					};
+					if(coins[coin.symbol]) {
+						// Add to existing stack
+						Object.assign(coins[coin.symbol].stack, coin.stack);
+					}
+					else {
+						coins[coin.symbol] = {
+							name: tokenInfo.CoinName,
+							symbol: coin.symbol,
+							icon: tokenInfo.ImageUrl,
+							stack: coin.stack,
+							isDust: true,
+							weight: 0
+						};
+					}
 				}
 				else {
-					console.warn('Ignoring unkown token in app config file: ' + coin.symbol);
+					coinscout.warn('Ignoring unkown token in app config file: ' + coin.symbol);
 				}
 			});
 		});
@@ -84,7 +95,9 @@ class App extends Component {
 		// Bind handlers
 		this.handleData = this.handleData.bind(this);
 		this.handleHide = this.handleHide.bind(this);
+		this.handleNewAllTimeHigh = this.handleNewAllTimeHigh.bind(this);
 		this.handleSettingsChange = this.handleSettingsChange.bind(this);
+		this.handleStackValueChange = this.handleStackValueChange.bind(this);
 		this.handleStatusChange = this.handleStatusChange.bind(this);
 		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
 		this.handleWeightChange = this.handleWeightChange.bind(this);
@@ -136,7 +149,7 @@ class App extends Component {
 					break;
 				
 				default:
-					console.warn(`API integration for ${blockchain} not yet implemented`);
+					coinscout.warn(`API integration for ${blockchain} not yet implemented`);
 			}
 		}
 	}
@@ -147,7 +160,7 @@ class App extends Component {
 		return price * this.rawPrices[from] / this.rawPrices[to];
 	}
 
-	
+
 	handleData(data) {
 
 		if(typeof data.PRICE === 'undefined' || Number.isNaN(data.PRICE)) {
@@ -161,7 +174,7 @@ class App extends Component {
 			? this.convertPrice(data.PRICE, data.TOSYMBOL, this.userDenomination)
 			: data.PRICE;
 
-		//console.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
+		//coinscout.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
 		//console.dir(convertedPrice);
 		
 		this.rawPrices[data.FROMSYMBOL] = data.PRICE;
@@ -189,6 +202,16 @@ class App extends Component {
 		);
 	}
 
+	handleNewAllTimeHigh(value) {
+
+		const allTimeHigh = {
+			timestamp: new Date().getTime(),
+			value: value
+		};
+
+		this.setState({ allTimeHigh }, this.handleSettingsChange({ allTimeHigh }));
+	}
+
 	/**
 	 * @param setting Key/value of setting and it's new value
 	 */
@@ -205,6 +228,19 @@ class App extends Component {
 		});
 	}
 
+
+	handleStackValueChange(coinProps, stackValue) {
+		const wasDust = coinProps.isDust,
+			  isDust = stackValue < this.dustThreshold;
+
+		// Only update state if things change
+		if(isDust !== wasDust) {
+			this.setState(state => {
+				state.coins[coinProps.symbol].isDust = isDust;
+				return state;
+			})
+		}
+	}
 
 	handleStatusChange(apiStatus) {
 		this.setState({apiStatus: apiStatus});
@@ -266,14 +302,20 @@ class App extends Component {
 			  coins = this.state.coins,
 			  prices = this.state.prices,
 			  settings = this.state.settings,
-			  settingsOpen = this.state.settingsOpen;
+			  settingsOpen = this.state.settingsOpen,
+			  sortProp = 'name';
 
 		const hidden = settings.hidden || [];
+
+		const settingsClasses = Object.keys(settings)
+			.map(setting => settings[setting] ? `setting-${setting}` : '')
+			.join(' ');
+
+		coins.sort((a, b) => a[sortProp] > b[sortProp] ? 1 : (a[sortProp] < b[sortProp] ? -1 : 0));
 
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
 		const coinComponents = Object.values(coins)
 			.filter(coin => !hidden.includes(coin.symbol))
-			.sort((a,b) => a.weight < b.weight ? 1 : (a.weight > b.weight ? -1 : 0))
 			.map((coin, index) =>
 				<Coin key={index}
 					denomination={this.normalizeValues ? this.userDenomination : coin.market}
@@ -281,12 +323,13 @@ class App extends Component {
 					marketCapSite={settings.marketCapSite}
 					onData={this.handleData}
 					onHide={this.handleHide}
+					onStackValueChange={this.handleStackValueChange}
 					onWeightChange={this.handleWeightChange}
 					price={prices[coin.symbol]}
 					pricePrecision={coin.pricePrecision || appConfig.pricePrecision}
 					settings={settings}
 					{...coin} />
-		);
+			);
 
 		// Populate watch list, or not, based on settings
 		const watchlist = settings.showWatchList ? coinConfig.watchlist.map((coin, index) =>
@@ -307,21 +350,25 @@ class App extends Component {
 				<div className="App-header">
 
 					<AppStatus status={apiStatus} />
+
+					<Metamask />
 				
 					<img src={logo} className="App-logo" alt="logo" onClick={this.toggleSettings} />
 					<h2>Welcome to CoinScout</h2>
 				
 					<PortfolioSummary
+						allTimeHigh={settings.allTimeHigh || {}}
 						coins={coins}
 						prices={prices}
 						formatters={this.currencyFormatters}
+						onAllTimeHigh={this.handleNewAllTimeHigh}
 						showBalances={settings.showBalances} />					
 				</div>
 
 				<SettingsPanel settings={settings} onChange={this.handleSettingsChange} isOpen={settingsOpen} />
 				
 				<div className="App-content">
-					<div className="column coins">
+					<div className={`column coins ${settingsClasses}`}>
 						<Coins coins={coinComponents} />
 						{watchlist && <Coins coins={watchlist} />}
 					</div>

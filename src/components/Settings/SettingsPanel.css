@@ -31,7 +31,7 @@
 
 .Settings-panel .Setting input {
 	margin-right: 6px;
-	top: -1px;
+	top: 1px;
 }
 
 .Settings-panel .Setting select {

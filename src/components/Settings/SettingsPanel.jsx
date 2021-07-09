@@ -31,10 +31,14 @@ class SettingsPanel extends Component {
 	
 	render() {
 
-		const marketCapSite = this.state.marketCapSite,
-			  showWatchList = this.state.showWatchList,
-			  showBalances = this.state.showBalances,
-			  showStack = this.state.showStack;
+		const {
+			marketCapSite,
+			showWatchList,
+		  	showBalances,
+		  	showDust,
+		  	showStack,
+		  	...state
+		} = this.state;	
 
 		return (
 			<div className={'Settings-panel' + (this.props.isOpen ? ' open' : '')}>
@@ -86,6 +90,17 @@ class SettingsPanel extends Component {
 							defaultChecked={showWatchList}
 							onChange={this.handleChange} />
 						Show Watch List
+					</label>
+				</div>
+
+				<div className="Setting">
+					<label>
+						<input
+							type="checkbox"
+							data-setting="showDust"
+							defaultChecked={showDust}
+							onChange={this.handleChange} />
+						Show Dust
 					</label>
 				</div>
 				

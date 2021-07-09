@@ -14,19 +14,22 @@ class CoinLabel extends Component {
 	
 	render() {
 
-		const icon = this.props.icon,
-			  name = this.props.name,
-			  url = this.props.url,
-			  size = 32,
+		const { icon, name, symbol, url, ...props } = this.props,
 			  priceUpdates = this.props.priceUpdates,
 			  logoStyle = {
 			      backgroundImage: 'url(' + icon + ')'
 			  };
 
+		// Remove 'Network Token' from end of tokens' names, so dumb
+		const coinNameNormalized = name.replace(/ Network Token$/, '');
+
 		return (
-			<div className={'Coin-label Coin-label-' + size}>
+			<div className="Coin-label">
 				<div className="Coin-logo" style={logoStyle} alt={name} title={url} onClick={this.handleLogoClick}></div>
-				<span className="Coin-name" title={`Updates: ${priceUpdates}`}>{name}</span>
+				<div className="Coin-symbol-and-name">
+					<span className="Coin-symbol" title={`Updates: ${priceUpdates}`}>{symbol}</span>
+					<span className="Coin-name">{coinNameNormalized}</span>
+				</div>
 			</div>
 		);
 	}

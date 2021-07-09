@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 class CoinPrice extends Component {
 
 	render() {
-		//console.log('his.props);
+		//coinscout.log('his.props);
 		const change = this.props.change;
 		const price = this.props.price;
 		const denomination = this.props.denomination;

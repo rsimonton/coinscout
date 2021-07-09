@@ -6,6 +6,7 @@
     "@fortawesome/fontawesome": "^1.1.8",
     "@fortawesome/react-fontawesome": "0.0.17",
     "crypto-js": "^3.1.9-1",
+    "ethers": "^5.0.25",
     "node.bittrex.api": "^0.6.6",
     "react": "^16.4.0",
     "react-dom": "^16.4.0",

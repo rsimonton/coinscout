@@ -1,5 +1,7 @@
+import { utils as coinscout } from 'util/Utils.js';
+
 // API Docs: https://www.coingecko.com/en/api#explore-api
-const API_ENDPOINT = 'https://api.coingecko.com/api/v3/';
+const API_ENDPOINT = 'https://api.coingecko.com/api/v3';
 
 const API_STATUS = {
 	CONNECTING: 'Connecting',
@@ -11,13 +13,14 @@ const INTERVAL_API_STATUS = 10000,
 	INTERVAL_UPDATE_SUBSCRIPTION = 8000,
 	RESPONSE_OK = 200;
 
-let initializedSubsCount = 0,
-	apiStatus = API_STATUS.DISCONNECTED,
+let apiStatus = API_STATUS.DISCONNECTED,
 	tokenInfo = {},
 	tokenIds = {},
 	initialized = false,
 	statusListeners = [],
 	subscriptions = new Map();
+
+const signMessage = msg => `CoinGecko API - ${msg}`;
 
 function addApiStatusListener(callback) {
 	statusListeners.push(callback);
@@ -79,7 +82,7 @@ function apiSubscribe(symbol, callbackData, callbackError) {
 	}
 
 	if(!tokenIds[symbol]) {
-		error('No coin found for symbol: ' + symbol);
+		warn('No coin found for symbol: ' + symbol);
 		return false;
 	}
 
@@ -104,21 +107,21 @@ function getApiStatus() {
 }
 
 
-function getTokenInfo(symbol, callback) {
+async function getTokenInfo(tokenAddress) {
 
-	let token = tokenInfo[symbol],
-		coinGeckoId = tokenIds[symbol];
+	let token = tokenInfo[tokenAddress],
+		coinGeckoId = tokenIds[tokenAddress];
 
 	if(!coinGeckoId) {
-		error(`No CoinGecko data found for token '${symbol}', ignoring`);
-		callback(false);
+		warn(`No price data found for token '${tokenAddress}', ignoring`);
+		return false;
 	}
 	else if(token) {
-		callback(Object.assign({}, token));
+		return Object.assign({}, token);
 	}
 	else {
 		// fetch and cache
-		fetchUri(`/coins/${coinGeckoId}?localization=false`)
+		return fetchUri(`/coins/${coinGeckoId}?localization=false`)
 			.then(response => response.json())
 			.then(data => {
 				//
@@ -127,24 +130,26 @@ function getTokenInfo(symbol, callback) {
 				token = {
 					CoinName: data.name,
 					ImageUrl: data.image.thumb, 	// other sizes available
-					Symbol: symbol
+					Symbol: data.symbol
 				};
 
 				// Return copy
-				tokenInfo[symbol] = Object.assign({}, token);
-
-				callback(token);
+				return Object.assign({}, token);
 			});
 	}
 }
 
 
 function error(str) {
-	console.error(`CoinGecko API: ${str}`);
+	console.error(signMessage(str));
+}
+
+function warn(str) {
+	coinscout.warn(signMessage(str));
 }
 
 function log(str) {
-	console.log(`CoinGecko API: ${str}`);
+	coinscout.log(signMessage(str));
 }
 
 
@@ -167,15 +172,16 @@ function updateSubscription(symbol) {
 		.then(response => response.json())
 		.then(data => {
 			// Sigh, legacy tech debt
-			const hack = {
+			const normalized = {
 				FROMSYMBOL: symbol,
 				TOSYMBOL: 'USD',
 				PRICE: data[tokenId].usd
 			};
-			subscriptions.get(symbol).forEach(callbacks => callbacks.data(hack));
+			subscriptions.get(symbol).forEach(callbacks => callbacks.data(normalized));
 		})
 		.catch(error => {
-			subscriptions.get(symbol).forEach(callbacks => callbacks.error(error));	
+			// Must passback symbol with error per our ApiProxy's requirements
+			subscriptions.get(symbol).forEach(callbacks => callbacks.error(symbol, error));	
 		})
 }
 

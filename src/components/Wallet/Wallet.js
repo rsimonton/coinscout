@@ -1,4 +1,4 @@
-import { getTokenInfo } from 'api/CryptoCompare/api.js';
+import { getTokenInfo } from 'api/ApiProxy.js';
 
 export default class Wallet {
 
@@ -16,9 +16,10 @@ export default class Wallet {
 	addToken(name, symbol, icon, quantity, url) {
 		let data = {
 			address: this.props.address,
-			name: name.replace(/Network Token$/,''),
+			name: name,
 			symbol: symbol,
 			icon: icon,
+			isDust: true,
 			market: 'USD',
 			stack: {},
 			url: url

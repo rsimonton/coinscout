@@ -12,7 +12,7 @@ export default class UserPrefs extends Component {
 	}
 
 	componentDidMount() {
-		console.log('UserPrefs:');
+		coinscout.log('UserPrefs:');
 		console.dir(this.state);
 	}
 

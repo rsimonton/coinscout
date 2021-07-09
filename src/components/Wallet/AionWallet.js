@@ -1,5 +1,6 @@
 import Wallet from './Wallet.js';
 import { getWalletInfo } from 'api/Aion/api.js';
+import { utils as coinscout } from 'util/Utils.js';
 
 export default class AionWallet extends Wallet {
 
@@ -12,7 +13,7 @@ export default class AionWallet extends Wallet {
 
 	handleWalletLoaded(walletInfo) {
 
-		console.log('Loaded AION address ' + this.props.address);
+		coinscout.log('Loaded AION address ' + this.props.address);
 	
 		this.getTokenInfo('AION', tokenInfo => {
 

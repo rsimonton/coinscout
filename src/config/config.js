@@ -35,6 +35,12 @@ export default {
 	//
 	pricePrecision: 3,
 	//
+	// Tokens whose total value across all connected wallets is less than
+	// this amount (in dollars) will not be displayed unless the "Show Dust"
+	// option is selected
+	//
+	dustThreshold: 25,
+	//
 	// Setting this value to one of the options below enables clicking on a
 	// coin to see its current info on the corresponding 3rd party site. Set
 	// to null to disable this functionality. Supported (case-sensitive)

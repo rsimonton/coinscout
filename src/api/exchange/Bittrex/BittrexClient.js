@@ -21,7 +21,7 @@ class BittrexClient {
 		requestHeaders.append('apisign', hash);
 
 		fetch(uri, { headers: requestHeaders, mode: 'cors' }).then(function(response) {
-			console.log('API response:');
+			coinscout.log('API response:');
 			console.dir(response);
 		})
 	}
@@ -30,7 +30,7 @@ class BittrexClient {
 		// First look 
 		/*
 		api.getbalances( function( data, err ) {
-  			console.log('data );
+  			coinscout.log('data );
 		});
 		*/
 	}

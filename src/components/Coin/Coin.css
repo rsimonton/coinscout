@@ -6,7 +6,7 @@
 	cursor: pointer;
 	display: inline-block;
 	font-family: 'Open Sans', sans-serif;
-	font-size: 22px;	
+	font-size: 21px;	
 	margin: 12px;
 	overflow: hidden;
 	padding: 8px 12px;
@@ -26,7 +26,6 @@
    filter: grayscale(100%);
 	-webkit-filter: grayscale(100%); /* Chrome, Safari, Opera */
 	opacity: .5;
-	pointer-events: none;
 }
 
 .Coin-hide-button {
@@ -52,40 +51,35 @@
 	border: solid 1px #ddd;
 }
 
-.Coin-label {
-	color: #777;
-	font-weight: 500;
-	line-height: 32px;
+.Coin-label > div {
+	display: inline-block;
 }
 
 .Coin-label .Coin-logo {
 	background-repeat: no-repeat;
-	background-position: center center;
-	display: inline-block;
+    background-position: center center;
+    background-size: 36px;
+    display: inline-block;
+    height: 36px;
+    width: 36px;
+    border-radius: 18px;
+    margin-right: 8px;
 }
 
-.Coin-label.Coin-label-16 .Coin-logo {
-	background-size: 16px;
-	height: 16px;
-	width: 16px;
-	border-radius: 8px;
-	margin-right: 6px;
+.Coin-label .Coin-symbol {
+	display: block;
+	vertical-align: top;
 }
-
-.Coin-label.Coin-label-32 .Coin-logo {
-	background-size: 32px;
-	height: 32px;
-	width: 32px;
-	border-radius: 16px;
-	margin-right: 8px;
-}
-
-.Coin-label.Coin-label-32 .Coin-name {
+.Coin-label .Coin-name {
+	color: #999;
+	display: block;
+	font-size: 13px;
 	position: relative;
-	top: -8px;
+	top: -3px;
 }
 
 .Coin-price {
+	margin: 5px 0;
 	text-align: right;
 }
 .Coin-price-decreasing {
@@ -106,7 +100,7 @@
 
 .Coin-stack {
 	color: #888;
-	font-size: .62em;
+	font-size: 14px;
 	margin-top: 6px;
 }
 
@@ -116,4 +110,12 @@
 
 .Coin-stack-value {
 	float: right;
+}
+
+.Coin-dust {
+	display: none;
+}
+
+.coins.setting-showDust .Coin-dust {
+	display: inline-block;
 }

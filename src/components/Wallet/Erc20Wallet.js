@@ -1,5 +1,6 @@
 import Wallet from './Wallet.js';
 import { getWalletInfo } from 'api/Ethplorer/api.js';
+import { utils as coinscout } from 'util/Utils.js';
 
 export default class Erc20Wallet extends Wallet {
 
@@ -12,7 +13,7 @@ export default class Erc20Wallet extends Wallet {
 	}
 
 	initializeWallet() {
-		console.log(`Initializing wallet ${this.props.address}...`);
+		coinscout.log(`Initializing wallet ${this.props.address}...`);
 
 		getWalletInfo(this.props.address, this.handleWalletLoaded);
 
@@ -24,15 +25,20 @@ export default class Erc20Wallet extends Wallet {
 	}
 
 	refreshWallet() {
-		console.log(`Refreshing wallet ${this.props.address}...`);
+		coinscout.log(`Refreshing wallet ${this.props.address}...`);
 		getWalletInfo(this.props.address, this.handleWalletLoaded);		
 	}
 
 	handleWalletLoaded(walletInfo) {
 		
-		let token, tokenDetails, tokens = [];
+		const onWalletLoaded = this.props.onWalletLoaded;
 
-		console.log(`Loaded wallet ${walletInfo.address}`);
+		let token,
+			tokenInfo,
+			tokens = [],
+			tokensLoaded = 0;
+
+		coinscout.log(`Loaded wallet ${walletInfo.address}`);
 
 		// API breaks out ETH, treating it differently that ERC20 tokens
 		if(walletInfo.ETH && walletInfo.ETH.balance) {
@@ -56,29 +62,37 @@ export default class Erc20Wallet extends Wallet {
 		});
 
 		tokens.forEach(token => {
-		
-			if(!(token.name && token.symbol && token.balance)) {
-				console.warn(`Ignoring incomplete token token ${token.name} (${token.symbol}):`);
-				console.dir(token);
-				return; // 'continue' equiv
-			}
-
-			this.getTokenInfo(token.symbol, tokenDetails => {
-
-				console.log(`Loaded token ${token.name} (${token.symbol}) from ERC20 address ${this.props.address}`);
-
-				tokenDetails && this.addToken(
-					tokenDetails.CoinName,
-					tokenDetails.Symbol,
-					tokenDetails.ImageUrl,
-					token.balance * Math.pow(10, -token.decimals),
-					`https://etherscan.io/token/${token.address}` 	// token.contract address, not wallet address				
-				);
+			this.maybeAddToken(token).then(() => {
+				// Call onWalletLoaded only once all tokens have been loaded
+				++tokensLoaded === tokens.length && onWalletLoaded && onWalletLoaded(this);
 			});
-
 		});
+	}
 
-		this.props.onWalletLoaded && this.props.onWalletLoaded(this);
+	async maybeAddToken(token) {
+
+		if(!(token.name && token.symbol && token.balance)) {
+			coinscout.warn(`Ignoring incomplete token: ${token.name} (${token.symbol}):`);
+			console.dir(token);
+			return;
+		}
+
+		let tokenInfo = await this.getTokenInfo(token.symbol);
+
+		if(!tokenInfo) {
+			coinscout.warn(`No APIs have token info for '${token.name}' (${token.symbol}) ... dropping`);
+			return;
+		}
+
+		coinscout.log(`Loaded token ${token.name} (${token.symbol}) from ERC20 address ${this.props.address}`);
+
+		tokenInfo && this.addToken(
+			token.name,
+			token.symbol,
+			tokenInfo.ImageUrl,
+			token.balance * Math.pow(10, -token.decimals),
+			`https://etherscan.io/token/${token.address}` 	// token.contract address, not wallet address				
+		);
 	}
 
 }
