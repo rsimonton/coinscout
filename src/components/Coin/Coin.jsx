@@ -4,7 +4,7 @@ import CoinPrice from './CoinPrice.jsx';
 import CoinStack from './CoinStack.jsx';
 
 import { apiSubscribe } from 'api/ApiProxy.js';
-import { utils as coinscout } from 'util/Utils.js';
+import Logger from 'util/Logger.js';
 
 import './Coin.css';
 
@@ -12,6 +12,8 @@ export default class Coin extends Component {
 	
 	constructor(props) {
 		super(props);
+
+		this.logger = new Logger('Coin.jsx');
 
 		this.dustThreshold = 10;	// dollars
 		this.formatter = this.props.formatters.USD;
@@ -73,7 +75,7 @@ export default class Coin extends Component {
 				: priceRaw < 1 ? 3 : 2;
 		}
 
-		//coinscout.log('riceStr + ' length: ' + priceStr.length + ' precision: ' + pricePrecision)
+		//this.logger.log('riceStr + ' length: ' + priceStr.length + ' precision: ' + pricePrecision)
 		const priceNormalized = parseFloat(priceRaw).toFixed(pricePrecision);
 
 		// Did the price go up/down or unchanged?
@@ -82,7 +84,7 @@ export default class Coin extends Component {
 			? this.state.priceChange
 			: this.state.priceChange; // CoinPrice.changeTypes[flags]; -- CoinGecko todo
 
-		//coinscout.log('change: ' + flags + ' = ' + priceChangeThis);
+		//this.logger.log('change: ' + flags + ' = ' + priceChangeThis);
 		const newWeight = priceUnchanged
 			? this.state.weight
 			: this.state.weight; // + (flags === CoinPrice.INCREASING ? 1 : -1); -- CoinGecko todo (but not used?)
@@ -131,7 +133,7 @@ export default class Coin extends Component {
 				link = `https://coinpaprika.com/coin/${this.props.symbol.toLowerCase()}-${this.props.name.toLowerCase().replace(/ /g, '-')}/`;
 				break;
 			default:
-				coinscout.log('No "marketCapSite" config item set, ignoring coin click');
+				this.logger.log('No "marketCapSite" config item set, ignoring coin click');
 		}
 
 		link && window.open(link);
@@ -170,7 +172,7 @@ export default class Coin extends Component {
 	handlePriceChange(upOrDown) {
 		const newWeight = this.state.weight + upOrDown;
 		this.setState({weight: newWeight}, function() {
-			coinscout.log(this.props.symbol + ' new weight is: ' + this.state.weight);
+			this.logger.log(this.props.symbol + ' new weight is: ' + this.state.weight);
 		});
 	}
 
@@ -203,7 +205,7 @@ export default class Coin extends Component {
 			this.priceHistory[new Date().getTime()] = price;
 		}
 
-		//coinscout.log(name + ': ' + Object.keys(this.priceHistory).length + ' updates');
+		//this.logger.log(name + ': ' + Object.keys(this.priceHistory).length + ' updates');
 		
 		return (
 			<div className={coinClass} data-weight={weight} onClick={this.handleClick}>

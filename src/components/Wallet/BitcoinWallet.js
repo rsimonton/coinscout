@@ -1,6 +1,6 @@
 import Wallet from './Wallet.js';
 import { getWalletInfo } from 'api/BlockchainInfo/api.js';
-import { utils as coinscout } from 'util/Utils.js';
+import Logger from 'util/Logger.js';
 
 /**
  * This is a misnomer, Bitcoin doesn't have a wallet concept, it uses one-time-use
@@ -12,6 +12,7 @@ export default class BitcoinWallet extends Wallet {
 	constructor(props) {
 		super(props);
 		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
+		this.logger = new Logger('BitcoinWallet.js');
 		
 		getWalletInfo(this.props.address, this.handleWalletLoaded);
 		
@@ -23,7 +24,7 @@ export default class BitcoinWallet extends Wallet {
 
 	async handleWalletLoaded(balance) {
 
-		coinscout.log('Loaded Bitcoin address ' + this.props.address);
+		this.logger.log('Loaded Bitcoin address ' + this.props.address);
 	
 		const tokenInfo = await this.getTokenInfo('BTC');
 

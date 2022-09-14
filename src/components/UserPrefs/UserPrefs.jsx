@@ -12,8 +12,8 @@ export default class UserPrefs extends Component {
 	}
 
 	componentDidMount() {
-		coinscout.log('UserPrefs:');
-		console.dir(this.state);
+		logger.log('UserPrefs:');
+		//console.dir(this.state);
 	}
 
 	render() {

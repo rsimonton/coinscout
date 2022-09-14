@@ -1,12 +1,12 @@
 import config from './config.js';
-import { utils as coinscout } from 'util/Utils.js';
+import Logger from 'util/Logger.js';
 
 // API Docs: https://min-api.cryptocompare.com/
 const API_ENDPOINT_CORS = 'https://min-api.cryptocompare.com/data/',
-	IMAGE_URL_BASE = 'https://cryptocompare.com',
 	HEARTBEAT_INTERVAL_MILLIS = 30000,
 	HEARTBEATS_MISSED_THRESHOLD = 2,
-	MESSAGE_TYPE_DATA = '5', // must be a String
+	IMAGE_URL_BASE = 'https://cryptocompare.com',
+    MESSAGE_TYPE_DATA = '5', // must be a String
 	MESSAGE_TYPE_ERROR = '500',
 	MESSAGE_TYPE_HEARTBEAT = '999',
 	RECONNECT_INTERVAL_MILLIS = 10000,
@@ -16,13 +16,15 @@ const API_ENDPOINT_CORS = 'https://min-api.cryptocompare.com/data/',
 		CONNECTED: 'Connected',
 		DISCONNECTED: 'Disconnected',
 		ERROR: 'Error'
+	},
+	TOKEN_NAME_OVERRIDES = {
+		ECO: 'EcoFi'
 	};
 
-const statusListeners = [],
+const logger = new Logger('CryptoCompare API'),
+	statusListeners = [],
 	subscriptions = new Map(),
 	tokenInfo = {};
-
-const signMessage = (str) => `CryptoCompare API - ${str}`;
 
 let	apiStatus = API_STATUS.DISCONNECTED,
 	heartbeatLast = null,
@@ -54,18 +56,18 @@ function apiInit(callback) {
 			Object.keys(json.Data).forEach(symbol => {
 				const data = json.Data[symbol];
 
-				// Api only returns path to image, we'll be nice and provide fully q'd URL. Yes
-				// it means storing lots of copies of the same string but I'm out of time. Maybe
-				// instead expose a method getImageUrl(symbol) that calls getTokenInfo to look
-				// up the base URL and then return fully q'd.  The issue there is that all API
-				// implementations (e.g. for Bitcoin) also need to expose that same method. Not
-				// bad, I like it, but I'm out of time
-				data.ImageUrl = IMAGE_URL_BASE + data.ImageUrl;
-
-				tokenInfo[symbol] = data;
+				if(TOKEN_NAME_OVERRIDES[symbol] && TOKEN_NAME_OVERRIDES[symbol] !== data.CoinName) {
+					// CryptoCompare only ever maps a symbol to one token (symbol is map key) so if
+					// it's not what we're expecting, ignore it
+					logger.warn(`For token $${symbol}, found named '${data.CoinName}' but expecting '${TOKEN_NAME_OVERRIDES[symbol]}', dropping!`)
+				}
+				else {
+					data.ImageUrl = IMAGE_URL_BASE + data.ImageUrl;
+					tokenInfo[symbol] = data;
+				}
 			});
 
-			log(`Loaded ${Object.keys(tokenInfo).length} tokens from CryptoCompare`);
+			logger.log(`Loaded ${Object.keys(tokenInfo).length} tokens from CryptoCompare`);
 
 			initWebsocket(() => {
 				// Regularly check to ensure API is connected, and attempt reconnect if not
@@ -84,14 +86,14 @@ function apiInit(callback) {
 function apiSubscribe(symbol, callbackData, callbackError) {
 	
 	if(!initialized) {
-		throw new Error(signMessage('You must call apiInit before calling apiSubscribe'));
+		throw new Error('You must call apiInit before calling apiSubscribe');
 	}
 
 	getTokenInfo(symbol).then(tokenInfo => {
 
 		if(!tokenInfo) {
 			// Need to passback symbol with error per our ApiProxy's requirements
-			callbackError(symbol, signMessage('No coin ID found for symbol: ' + symbol));
+			callbackError(symbol, 'No coin ID found for symbol: ' + symbol);
 			return;
 		}
 
@@ -113,11 +115,17 @@ function getApiStatus() {
 
 async function getTokenInfo(symbol) {
 	const data = tokenInfo[symbol] || false;
-	data || warn(`No token found for symbol ${symbol}`);
+	data || logger.warnOnce(`No token found for symbol ${symbol}`);
 	// The reason we're doing this asynch is that getTokenInfo in our
 	// CoinGecko API client has to be async, and both api clients need
 	// to have identical function signatures/handling
 	return data;
+}
+
+
+async function getTokenInfos(symbols) {
+	// Not supported
+	return Promise.resolve(false);
 }
 
 
@@ -133,26 +141,26 @@ function initWebsocket(callback) {
 	
 	ws.onopen = (event) => {
 		
-		log('API Connected!');
+		logger.log('API Connected!');
 		setApiStatus(API_STATUS.CONNECTED);
 		heartbeatLast = new Date().getTime();
 
 		callback && callback();
 
 		if(0 < subscriptions.size) {
-			log('Re-subscribing to streams...');
+			logger.log('Re-subscribing to streams...');
 			subscriptions.forEach((callbacks, symbol) => subscriptionRefresh(symbol));
 		}
 	};
 
 	ws.onclose = (event) => {
-		log('API Disconnected :(');
+		logger.log('API Disconnected :(');
 		setApiStatus(API_STATUS.DISCONNECTED);
 	};
 
 	ws.onerror = (event) => {
-		error('API Error:');
-		console.dir(event);
+		logger.error('API Error:');
+		//console.dir(event);
 		setApiStatus(API_STATUS.ERROR);
 	};
 
@@ -180,7 +188,7 @@ function initWebsocket(callback) {
 			}
 			else {
 				// 'PARAMETER' is the subscription signature, e.g. 5~CCCAGG~OM~USD
-				const error = signMessage(`${data.MESSAGE}: ${data.INFO}`),
+				const error = `${data.MESSAGE}: ${data.INFO}`,
 					  symbol = data.PARAMETER.split('~')[2];
 
 				// 
@@ -203,32 +211,17 @@ function initWebsocket(callback) {
 }
 
 
-function error(str) {
-	console.error(signMessage(str));
-}
-
-
-function warn(str) {
-	coinscout.warn(signMessage(str));
-}
-
-
-function log(str) {
-	coinscout.log(signMessage(str));
-}
-
-
 function monitorApiConnection() {
 	window.setInterval(() => {
 
 		const now = new Date().getTime();
 
 		if(API_STATUS.CONNECTED !== getApiStatus()) {
-			log('API disconnected, attempting to reconnect...');
+			logger.log('API disconnected, attempting to reconnect...');
 			initWebsocket();
 		}
 		else if(heartbeatLast <= (now - HEARTBEATS_MISSED_THRESHOLD * HEARTBEAT_INTERVAL_MILLIS)) {
-			warn(`Missed ${HEARTBEATS_MISSED_THRESHOLD} heartbeats, re-initializing WebSocket...`);
+			logger.warn(`Missed ${HEARTBEATS_MISSED_THRESHOLD} heartbeats, re-initializing WebSocket...`);
 			setApiStatus(API_STATUS.DISCONNECTED);
 			initWebsocket();
 		}
@@ -246,13 +239,17 @@ function subscriptionAdd(symbol, callbackData, callbackError) {
 	
 	const subscribed = subscriptions.has(symbol);
 
-	subscribed || log('Adding coin subscription: ' + symbol);
+	subscribed || logger.log('Adding coin subscription: ' + symbol);
 	subscribed || subscriptions.set(symbol, []);
 
-	// Even if already subscribed, add the additional callbacks
+	// Even if already subscribed, add the additional callbacks. Making these async
+	// because I was seeing browser warnings that the websocket data handler was taking
+	// too long to execute, and that's because it calls these callbacks for every sub,
+	// for each message received. This fixed it (and because these functions don't have
+	// return values, no other code logic updates were required)
 	subscriptions.get(symbol).push({
-		data: callbackData,
-		error: callbackError
+		data: async(data) => callbackData(data),
+		error: async(err) => callbackError(err)
 	});
 
 	subscribed || subscriptionUpdate(symbol, 'SubAdd');
@@ -291,9 +288,9 @@ function websocketSend(obj) {
 		ws.send(JSON.stringify(obj));
 	}
 	else {
-		throw signMessage(`Cannot send websocket message, status is ${getApiStatus()}. Message was: ${JSON.stringify(obj)}`);
+		throw `Cannot send websocket message, status is ${getApiStatus()}. Message was: ${JSON.stringify(obj)}`;
 	}
 }
 
 
-export { addApiStatusListener, apiInit, apiSubscribe, getApiStatus, getTokenInfo };
+export { addApiStatusListener, apiInit, apiSubscribe, getApiStatus, getTokenInfo, getTokenInfos };

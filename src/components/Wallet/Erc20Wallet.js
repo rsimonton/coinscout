@@ -1,6 +1,6 @@
 import Wallet from './Wallet.js';
 import { getWalletInfo } from 'api/Ethplorer/api.js';
-import { utils as coinscout } from 'util/Utils.js';
+import Logger from 'util/Logger.js';
 
 export default class Erc20Wallet extends Wallet {
 
@@ -8,12 +8,13 @@ export default class Erc20Wallet extends Wallet {
 		super(props);
 		
 		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
+		this.logger = new Logger('Erc20Wallet.js');
 		
 		this.initializeWallet();		
 	}
 
 	initializeWallet() {
-		coinscout.log(`Initializing wallet ${this.props.address}...`);
+		this.logger.log(`Initializing wallet ${this.props.address}...`);
 
 		getWalletInfo(this.props.address, this.handleWalletLoaded);
 
@@ -25,7 +26,7 @@ export default class Erc20Wallet extends Wallet {
 	}
 
 	refreshWallet() {
-		coinscout.log(`Refreshing wallet ${this.props.address}...`);
+		this.logger.log(`Refreshing wallet ${this.props.address}...`);
 		getWalletInfo(this.props.address, this.handleWalletLoaded);		
 	}
 
@@ -38,7 +39,7 @@ export default class Erc20Wallet extends Wallet {
 			tokens = [],
 			tokensLoaded = 0;
 
-		coinscout.log(`Loaded wallet ${walletInfo.address}`);
+		this.logger.log(`Loaded wallet ${walletInfo.address}`);
 
 		// API breaks out ETH, treating it differently that ERC20 tokens
 		if(walletInfo.ETH && walletInfo.ETH.balance) {
@@ -72,19 +73,19 @@ export default class Erc20Wallet extends Wallet {
 	async maybeAddToken(token) {
 
 		if(!(token.name && token.symbol && token.balance)) {
-			coinscout.warn(`Ignoring incomplete token: ${token.name} (${token.symbol}):`);
-			console.dir(token);
+			this.logger.warnOnce(`Ignoring incomplete token: ${token.name} (${token.symbol}):`);
+			//console.dir(token);
 			return;
 		}
 
 		let tokenInfo = await this.getTokenInfo(token.symbol);
 
 		if(!tokenInfo) {
-			coinscout.warn(`No APIs have token info for '${token.name}' (${token.symbol}) ... dropping`);
+			this.logger.warnOnce(`No APIs have token info for '${token.name}' (${token.symbol}) ... dropping`);
 			return;
 		}
 
-		coinscout.log(`Loaded token ${token.name} (${token.symbol}) from ERC20 address ${this.props.address}`);
+		this.logger.log(`Loaded token ${token.name} (${token.symbol}) from ERC20 address ${this.props.address}`);
 
 		tokenInfo && this.addToken(
 			token.name,

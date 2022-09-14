@@ -76,8 +76,8 @@ class CoinStack extends Component {
 
 	render() {
 		/*
-		coinscout.log(`${this.props.symbol} CoinStack props:`);
-		console.dir(this.props);
+		logger.log(`${this.props.symbol} CoinStack props:`);
+		//console.dir(this.props);
 		*/
 		const breakdown = this.state.breakdown;
 		const count = this.state.count;

@@ -11,7 +11,7 @@ const API_ENDPOINT = 'https://api.ethplorer.io',
 	ENDPOINT_TOKEN_INFO = 'getTokenInfo',
 	ENDPOINT_WALLET_INFO = 'getAddressInfo',
 	REQUEST_QUEUE = [],
-	THROTTLE_INTERVAL = 200; // millis - avoid 429s @ Ethplorer.io
+	THROTTLE_INTERVAL = 3000; // millis - avoid 429s @ Ethplorer.io
 
 // Just syntactic sugar
 const get = (uri) => fetch(`${uri}?apiKey=${API_KEY}`);
@@ -28,7 +28,11 @@ setInterval(() => {
 	
 	request && get(`${API_ENDPOINT}/${request.endpoint}/${request.address}/`)
 		.then(res => res.json())
-		.then(json => request.callback(json));
+		.then(json => request.callback(json))
+		.catch(e => {
+			console.log('Ethplorer API error:');
+			//console.dir(e);
+		});
 
 }, THROTTLE_INTERVAL);
 

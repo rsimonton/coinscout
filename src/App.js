@@ -4,14 +4,13 @@ import AppStatus from './components/App/AppStatus';
 import Coin from './components/Coin/Coin.jsx';
 import Coins from './components/Coins/Coins.jsx';
 import Metamask from './components/Ethereum/Metamask.jsx';
-import AionWallet from './components/Wallet/AionWallet.js';
 import BitcoinWallet from './components/Wallet/BitcoinWallet.js';
 import Erc20Wallet from './components/Wallet/Erc20Wallet.js';
 import PortfolioSummary from './components/Portfolio/PortfolioSummary.jsx';
 import SettingsPanel from './components/Settings/SettingsPanel.jsx';
 import { addApiStatusListener, getApiStatus } from './api/CryptoCompare/api.js';
-import { getTokenInfo } from 'api/ApiProxy.js';
-import { utils as coinscout } from 'util/Utils.js';
+import { getTokenInfo, getTokenInfos } from 'api/ApiProxy.js';
+import Logger from 'util/Logger.js';
 
 //import ApiManager from 'api/ApiManager.js';
 //import UserPrefs from 'components/UserPrefs/UserPrefs.jsx';
@@ -32,7 +31,8 @@ class App extends Component {
 		let cachedSettings = {},
 			coins = [];
 
-		//this.apiManager = new ApiManager();		
+		//this.apiManager = new ApiManager();
+		this.logger = new Logger('App (class)');	
 		
 		this.dustThreshold = appConfig.dustThreshold;	// dollars
 		this.normalizeValues = appConfig.normalizeValues;
@@ -54,6 +54,14 @@ class App extends Component {
 		Object.keys(cache).forEach(setting =>
 			cachedSettings[setting] = JSON.parse(cache[setting])
 		);
+
+
+		getTokenInfos(coinConfig.portfolio.map(coin => coin.symbol))
+			.then(data => {
+				console.log('Got batch!')
+				console.dir(data)
+			})
+
 
 		// Main goal here is to create a map of each coin, keyed by its symbol
 		coinConfig.portfolio.forEach(coin => {
@@ -78,7 +86,7 @@ class App extends Component {
 					}
 				}
 				else {
-					coinscout.warn('Ignoring unkown token in app config file: ' + coin.symbol);
+					this.logger.warn('Ignoring unkown token in app config file: ' + coin.symbol);
 				}
 			});
 		});
@@ -121,15 +129,6 @@ class App extends Component {
 
 			switch(blockchain) {
 				
-				case 'aion':
-					addresses.forEach(addr => {
-						let w = new AionWallet({
-							address: addr,
-							onWalletLoaded: this.handleWalletLoaded
-						});
-					});
-					break;
-
 				case 'bitcoin':
 					addresses.forEach(addr => {
 						let w = new BitcoinWallet({
@@ -149,7 +148,7 @@ class App extends Component {
 					break;
 				
 				default:
-					coinscout.warn(`API integration for ${blockchain} not yet implemented`);
+					this.logger.warn(`API integration for ${blockchain} not yet implemented`);
 			}
 		}
 	}
@@ -174,7 +173,7 @@ class App extends Component {
 			? this.convertPrice(data.PRICE, data.TOSYMBOL, this.userDenomination)
 			: data.PRICE;
 
-		//coinscout.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
+		//this.logger.log(data.FROMSYMBOL + ': ' + data.PRICE + ' ' + data.TOSYMBOL + ' --> ' + convertedPrice[data.FROMSYMBOL] + ' ' + this.userDenomination);
 		//console.dir(convertedPrice);
 		
 		this.rawPrices[data.FROMSYMBOL] = data.PRICE;
@@ -311,7 +310,7 @@ class App extends Component {
 			.map(setting => settings[setting] ? `setting-${setting}` : '')
 			.join(' ');
 
-		coins.sort((a, b) => a[sortProp] > b[sortProp] ? 1 : (a[sortProp] < b[sortProp] ? -1 : 0));
+		//coins.sort((a, b) => a[sortProp] > b[sortProp] ? 1 : (a[sortProp] < b[sortProp] ? -1 : 0));
 
 		// Ok React, this is pretty rad - render Coins from JSON config array, write into variable
 		const coinComponents = Object.values(coins)

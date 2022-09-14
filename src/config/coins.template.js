@@ -6,9 +6,6 @@
  */
 export default {
 	blockchains: {
-		aion: [
-			/* AION addresses here */
-		],
 		// Public ERC20 wallet addresses hodling ETH/tokens
 		ethereum: [
 			/* ERC20 addresses here */

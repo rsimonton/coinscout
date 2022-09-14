@@ -39,7 +39,7 @@ export default {
 	// this amount (in dollars) will not be displayed unless the "Show Dust"
 	// option is selected
 	//
-	dustThreshold: 25,
+	dustThreshold: 100,
 	//
 	// Setting this value to one of the options below enables clicking on a
 	// coin to see its current info on the corresponding 3rd party site. Set

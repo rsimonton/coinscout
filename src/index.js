@@ -6,26 +6,27 @@ import registerServiceWorker from './registerServiceWorker';
 import { apiInit as restInit } from './api/CoinGecko/api.js';
 import { apiInit as websocketInit } from './api/CryptoCompare/api.js';
 
-import { utils as coinscout } from './util/Utils.js';
+import Logger from './util/Logger.js';
 
 import './index.css';
 
-const apis = [ restInit, websocketInit ]
+const apis = [ restInit, websocketInit ],
+	logger = new Logger('index.js');
 
 let initialized = 0;
 
 function maybeRender(initRoutine) {
 
-	//coinscout.log(`${initRoutine} complete!`);
+	//logger.log(`${initRoutine} complete!`);
 
 	if(++initialized === apis.length) {
-		coinscout.log('APIs initialized, rendering app...');
+		logger.log('APIs initialized, rendering app...');
 		ReactDOM.render(<App />, document.getElementById('root'));
 		registerServiceWorker();
 	}
 }
 
 apis.forEach(initRoutine => {
-	//coinscout.log(`${initRoutine}...`);
+	//logger.log(`${initRoutine}...`);
 	initRoutine(() => maybeRender(initRoutine));
 });

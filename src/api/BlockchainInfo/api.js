@@ -6,7 +6,7 @@
 const API_ENDPOINT = 'https://blockchain.info/q',
 	ENDPOINT_ADDRESS_INFO = `${API_ENDPOINT}/addressbalance`,
 	REQUEST_QUEUE = [],
-	THROTTLE_INTERVAL = 10; // millis
+	THROTTLE_INTERVAL = 60000; // millis
 
 // Just syntactic sugar
 const get = (address) => fetch(`${ENDPOINT_ADDRESS_INFO}/${address}/`);

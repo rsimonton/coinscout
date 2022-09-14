@@ -1,6 +1,6 @@
 import * as coinGecko from 'api/CoinGecko/api.js';
 import * as cryptoCompare from 'api/CryptoCompare/api.js';
-import { utils as coinscout } from 'util/Utils.js';
+import Logger from 'util/Logger.js';
 
 /**
  * API abstraction to provide a unified interface for app that
@@ -14,7 +14,6 @@ class ApiProxy {
 			cryptoCompare,	// websocket
 			coinGecko		// REST
 		];
-
 		this.subscriptions = new Map();
 	}
 
@@ -68,9 +67,8 @@ class ApiSubscription {
 //
 //	Variables
 // 
-const proxy = new ApiProxy(),
-	  signMessage = (msg) => `ApiProxy - ${msg}`,
-	  warn = (msg) => { coinscout.warn(signMessage(msg)) };
+const logger = new Logger('ApiProxy.js'),
+	proxy = new ApiProxy();
 
 
 //
@@ -100,7 +98,7 @@ function _handleApiError(symbol, error) {
 	
 	let nextApi = proxy.getNextApi(sub.getApi());
 
-	warn(error);
+	logger.warn(error);
 
 	if(null === nextApi) {
 		// All APIs exhausted, delete subscription and call subscribor error handler
@@ -130,7 +128,9 @@ function apiSubscribe(symbol, callbackSuccess, callbackError) {
 	_doSubscribe(sub);
 }
 
-
+/**
+ * Get info for a single token
+ */
 async function getTokenInfo(symbol, callback) {
 
 	let tokenInfo;
@@ -147,4 +147,23 @@ async function getTokenInfo(symbol, callback) {
 	return false;
 }
 
-export { apiSubscribe, getTokenInfo };
+/**
+ * Get info for multiple tokens
+ */
+async function getTokenInfos(symbols, callback) {
+
+	let tokenInfos;
+
+	for(let api of proxy.getApis()) {
+		
+		tokenInfos = await api.getTokenInfos(symbols);
+
+		if(tokenInfos) {
+			return tokenInfos;
+		}
+	}
+
+	return false;
+}
+
+export { apiSubscribe, getTokenInfo, getTokenInfos };
