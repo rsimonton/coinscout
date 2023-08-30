@@ -1,121 +1,125 @@
 .Coin {
-	background-color: #eee;
-	border: solid 1px #666;
-	border-radius: 6px;
-	box-shadow: 1px 2px 2px #ccc;
-	cursor: pointer;
-	display: inline-block;
-	font-family: 'Open Sans', sans-serif;
-	font-size: 21px;	
-	margin: 12px;
-	overflow: hidden;
-	padding: 8px 12px;
-	width: 180px;
+  background-color: #eee;
+  border: solid 1px #666;
+  border-radius: 6px;
+  box-shadow: 1px 2px 2px #ccc;
+  cursor: pointer;
+  display: inline-block;
+  font-family: "Open Sans", sans-serif;
+  font-size: 21px;
+  margin: 12px;
+  overflow: hidden;
+  padding: 8px 12px;
+  width: 180px;
 }
 
 .Coin:hover {
-	background-color: #e5e5e5;
-	box-shadow: 2px 3px 3px #ccc;
+  background-color: #e5e5e5;
+  box-shadow: 2px 3px 3px #ccc;
 }
 
 .Coin:hover .Coin-hide-button {
-	visibility: visible;
+  visibility: visible;
 }
 
 .Coin.Coin-invalid {
-   filter: grayscale(100%);
-	-webkit-filter: grayscale(100%); /* Chrome, Safari, Opera */
-	opacity: .5;
+  filter: grayscale(100%);
+  -webkit-filter: grayscale(100%); /* Chrome, Safari, Opera */
+  opacity: 0.5;
 }
 
 .Coin-hide-button {
-	background-color: #f4f4f4;
-	border: solid 1px transparent;
-	border-radius: 8px;
-	float: right;
-	font-size: 12px;
-	height: 15px;
-	width: 15px;
-	line-height: 17px;
-	text-align: center;
-	vertical-align: middle;
-	visibility: hidden;
+  background-color: #f4f4f4;
+  border: solid 1px transparent;
+  border-radius: 8px;
+  float: right;
+  font-size: 12px;
+  height: 15px;
+  width: 15px;
+  line-height: 17px;
+  text-align: center;
+  vertical-align: middle;
+  visibility: hidden;
 }
 
 .Coin-hide-button:hover {
-	background-color: #fff;
+  background-color: #fff;
 }
 
 .Coin-hide-button:active {
-	background-color: #ccc;
-	border: solid 1px #ddd;
+  background-color: #ccc;
+  border: solid 1px #ddd;
 }
 
 .Coin-label > div {
-	display: inline-block;
+  display: inline-block;
 }
 
 .Coin-label .Coin-logo {
-	background-repeat: no-repeat;
-    background-position: center center;
-    background-size: 36px;
-    display: inline-block;
-    height: 36px;
-    width: 36px;
-    border-radius: 18px;
-    margin-right: 8px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 36px;
+  display: inline-block;
+  height: 36px;
+  width: 36px;
+  border-radius: 18px;
+  margin-right: 8px;
 }
 
 .Coin-label .Coin-symbol {
-	display: block;
-	vertical-align: top;
+  display: block;
+  vertical-align: top;
 }
 .Coin-label .Coin-name {
-	color: #999;
-	display: block;
-	font-size: 13px;
-	position: relative;
-	top: -3px;
+  color: #999;
+  display: block;
+  font-size: 13px;
+  position: relative;
+  top: -3px;
 }
 
 .Coin-price {
-	margin: 5px 0;
-	text-align: right;
+  margin: 5px 0;
+  text-align: right;
 }
 .Coin-price-decreasing {
-	color: red;
+  color: red;
 }
 .Coin-price-increasing {
-	color: green;
+  color: green;
 }
 .Coin-price-unchanged {
-	color: black;
+  color: black;
 }
 
 /* 'sign' e.g. 'dollar sign' e.g. $ */
 .Coin-price-sign {
-	position: relative;
-	left: -4px;
+  position: relative;
+  left: -4px;
 }
 
 .Coin-stack {
-	color: #888;
-	font-size: 14px;
-	margin-top: 6px;
+  color: #888;
+  font-size: 14px;
+  margin-top: 6px;
 }
 
 .Coin-stack-count:last-child {
-	float: right;
+  float: right;
 }
 
 .Coin-stack-value {
-	float: right;
+  float: right;
 }
 
 .Coin-dust {
-	display: none;
+  display: none;
 }
 
 .coins.setting-showDust .Coin-dust {
-	display: inline-block;
+  display: inline-block;
+}
+
+.coins.setting-showNfts .Coin-nft {
+  display: inline-block;
 }

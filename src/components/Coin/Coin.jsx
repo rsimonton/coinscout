@@ -1,243 +1,307 @@
-import React, { Component } from 'react';
-import CoinLabel from './CoinLabel.jsx';
-import CoinPrice from './CoinPrice.jsx';
-import CoinStack from './CoinStack.jsx';
+import React, { Component } from "react";
+import CoinLabel from "./CoinLabel.jsx";
+import CoinPrice from "./CoinPrice.jsx";
+import CoinStack from "./CoinStack.jsx";
 
-import { apiSubscribe } from 'api/ApiProxy.js';
-import Logger from 'util/Logger.js';
+import { apiSubscribe } from "api/ApiProxy.js";
+import Logger from "util/Logger.js";
 
-import './Coin.css';
+import "./Coin.css";
 
 export default class Coin extends Component {
-	
-	constructor(props) {
-		super(props);
+  constructor(props) {
+    super(props);
 
-		this.logger = new Logger('Coin.jsx');
+    this.logger = new Logger("Coin.jsx");
 
-		this.dustThreshold = 10;	// dollars
-		this.formatter = this.props.formatters.USD;
-		this.lastPrice = NaN;
-		this.priceChangeLast = CoinPrice.changeTypes[CoinPrice.UNCHANGED];	
-		this.priceHistory = {};
+    this.dustThreshold = 10; // dollars
+    this.formatter = this.props.formatters.USD;
+    this.lastPrice = NaN;
+    this.priceChangeLast = CoinPrice.changeTypes[CoinPrice.UNCHANGED];
+    this.priceHistory = {};
 
-		this.state = {
-			priceUpdates: 0,
-			subscribed: false,
-			stackValue: 0,
-			weight: 0
-		};
+    this.state = {
+      priceUpdates: 0,
+      subscribed: false,
+      stackValue: 0,
+      weight: 0,
+    };
 
-		this.apiSubscribe = this.apiSubscribe.bind(this);
-		this.handleClick = this.handleClick.bind(this);
-		this.handleApiData = this.handleApiData.bind(this);
-		this.handleApiError = this.handleApiError.bind(this);
-		this.handleHide = this.handleHide.bind(this);
-		this.handleStackValueChange = this.handleStackValueChange.bind(this);		
-	}
+    this.apiSubscribe = this.apiSubscribe.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.handleApiData = this.handleApiData.bind(this);
+    this.handleApiError = this.handleApiError.bind(this);
+    this.handleHide = this.handleHide.bind(this);
+    this.handleStackValueChange = this.handleStackValueChange.bind(this);
+  }
 
-	// This intentional name collision is ridiculous lol
-	apiSubscribe() {
+  // This intentional name collision is ridiculous lol
+  apiSubscribe() {
+    apiSubscribe(this.props.symbol, this.handleApiData, this.handleApiError);
 
-		apiSubscribe(
-			this.props.symbol,
-			this.handleApiData,
-			this.handleApiError
-		);
+    const newState = { subscribed: true };
 
-		const newState = { subscribed: true };
+    this.setState(newState);
+  }
 
-		this.setState(newState);
-	}
+  componentDidMount() {
+    this.apiSubscribe();
+  }
 
-	componentDidMount() {
-		this.apiSubscribe();
-	}
+  componentWillReceiveProps(nextProps) {
+    const priceRaw = parseFloat(nextProps.price);
 
-	componentWillReceiveProps(nextProps) {
+    if (Number.isNaN(priceRaw)) {
+      return;
+    }
 
-		const priceRaw = parseFloat(nextProps.price);
+    const priceStr = priceRaw ? priceRaw.toString() : "";
+    const denomination = nextProps.denomination;
+    const precisionRaw = nextProps.pricePrecision;
 
-		if(Number.isNaN(priceRaw)) {
-			return;
-		}
+    let pricePrecision = 0;
 
-		const priceStr = priceRaw ? priceRaw.toString() : '';
-		const denomination = nextProps.denomination;		
-		const precisionRaw = nextProps.pricePrecision;
-		
-		let pricePrecision = 0;
+    if (priceRaw) {
+      const decimalIndex = priceStr.indexOf(".");
+      pricePrecision =
+        "USD" !== denomination
+          ? decimalIndex +
+            priceStr.substr(decimalIndex).search(/[1-9]/) +
+            precisionRaw -
+            2
+          : priceRaw < 1
+          ? 3
+          : 2;
+    }
 
-		if(priceRaw) {
-			const decimalIndex = priceStr.indexOf('.');
-			pricePrecision = 'USD' !== denomination
-				? decimalIndex + priceStr.substr(decimalIndex).search(/[1-9]/) + precisionRaw - 2
-				: priceRaw < 1 ? 3 : 2;
-		}
+    //this.logger.log('riceStr + ' length: ' + priceStr.length + ' precision: ' + pricePrecision)
+    const priceNormalized = this.formatNumber(priceRaw); // parseFloat(priceRaw).toFixed(pricePrecision);
 
-		//this.logger.log('riceStr + ' length: ' + priceStr.length + ' precision: ' + pricePrecision)
-		const priceNormalized = parseFloat(priceRaw).toFixed(pricePrecision);
+    // Did the price go up/down or unchanged?
+    const priceUnchanged =
+      priceNormalized === this.formatNumber(this.state.price); // parseFloat(this.state.price).toFixed(pricePrecision);
+    const priceChangeThis = priceUnchanged
+      ? this.state.priceChange
+      : this.state.priceChange; // CoinPrice.changeTypes[flags]; -- CoinGecko todo
 
-		// Did the price go up/down or unchanged?
-		const priceUnchanged = priceNormalized === parseFloat(this.state.price).toFixed(pricePrecision);
-		const priceChangeThis = priceUnchanged
-			? this.state.priceChange
-			: this.state.priceChange; // CoinPrice.changeTypes[flags]; -- CoinGecko todo
+    //this.logger.log('change: ' + flags + ' = ' + priceChangeThis);
+    const newWeight = priceUnchanged ? this.state.weight : this.state.weight; // + (flags === CoinPrice.INCREASING ? 1 : -1); -- CoinGecko todo (but not used?)
 
-		//this.logger.log('change: ' + flags + ' = ' + priceChangeThis);
-		const newWeight = priceUnchanged
-			? this.state.weight
-			: this.state.weight; // + (flags === CoinPrice.INCREASING ? 1 : -1); -- CoinGecko todo (but not used?)
+    // Keep track of last price change
+    this.priceChangeLast = priceChangeThis;
 
-		// Keep track of last price change
-		this.priceChangeLast = priceChangeThis;
+    const newState = {};
 
-		const newState = {};
+    priceUnchanged ||
+      Object.assign(newState, {
+        price: priceNormalized,
+        priceChange: priceChangeThis,
+        weight: newWeight,
+      });
 
-		priceUnchanged || Object.assign(newState, {
-			price: priceNormalized,
-			priceChange: priceChangeThis,
-			weight: newWeight
-		});
+    Object.keys(newState).length && this.setState(newState);
 
-		Object.keys(newState).length && this.setState(newState);
+    // This is where we were bubbling the coins weight change up to the app,
+    // with the idea that the app could sort the coins based on their weights.
+    // This causes problems with React due to too many updates, which I'm not
+    // sure what the cause of was, so shelving that idea for now.
+    //priceUnchanged || this.props.onWeightChange(this.props.symbol, newWeight);
+  }
 
-		// This is where we were bubbling the coins weight change up to the app, 
-		// with the idea that the app could sort the coins based on their weights.
-		// This causes problems with React due to too many updates, which I'm not
-		// sure what the cause of was, so shelving that idea for now.
-		//priceUnchanged || this.props.onWeightChange(this.props.symbol, newWeight);
-	}
+  formatNumber(value) {
+    const absValue = Math.abs(value);
 
-	handleClick() {
-		
-		let link = false;
+    // Truncate a number to a specific number of decimal places without rounding.
+    const truncate = (number, decimalPlaces) => {
+      const factor = 10 ** decimalPlaces;
+      return Math.trunc(number * factor) / factor;
+    };
 
-		switch(this.props.marketCapSite) {
-			case 'CoinGecko':
-				link = `https://www.coingecko.com/en/coins/${this.props.name.toLowerCase().replace(/ /g, '-')}/`;
-				break;
-			case 'CoinMarketCap':
-				link = 'https://coinmarketcap.com/currencies/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
-				break;
-			case 'CryptoCompare':
-				link = 'https://cryptocompare.com/coins/' + this.props.symbol.toLowerCase() + '/markets/' + this.props.market;
-				break;
-			case 'LiveCoinWatch':
-				link = 'https://www.livecoinwatch.com/price/' + this.props.name.replace(/ /g, '') + '-' + this.props.symbol;
-				break;
-			case 'Messari':
-				link = 'https://messari.io/asset/' + this.props.name.toLowerCase().replace(/ /g, '-') + '/';
-				break;
-			case 'CoinPaprika':
-				link = `https://coinpaprika.com/coin/${this.props.symbol.toLowerCase()}-${this.props.name.toLowerCase().replace(/ /g, '-')}/`;
-				break;
-			default:
-				this.logger.log('No "marketCapSite" config item set, ignoring coin click');
-		}
+    let decimalPlaces = 2;
 
-		link && window.open(link);
-	}
+    // For numbers less than 1, ensure at least three significant figures.
+    if (absValue < 1 && absValue !== 0) {
+      const numZeros = Math.ceil(Math.abs(Math.log10(absValue))) + 1;
+      decimalPlaces = Math.max(numZeros + 1, decimalPlaces);
+    }
 
-	handleApiData(data) {
-		//console.dir(data);
+    const truncatedValue = truncate(value, decimalPlaces);
+    return truncatedValue.toFixed(decimalPlaces);
+  }
 
-		// 'data' is null if API subscription attempt returned no data. Hide the symbol
-		if(null === data) {
-			this.handleHide();
-			return;
-		}
+  handleClick() {
+    let link = false;
 
-		this.setState(data, function() {
-			this.props.onData(data)
-		});
-	}
+    switch (this.props.marketCapSite) {
+      case "CoinGecko":
+        link = `https://www.coingecko.com/en/coins/${this.props.name
+          .toLowerCase()
+          .replace(/ /g, "-")}/`;
+        break;
+      case "CoinMarketCap":
+        link =
+          "https://coinmarketcap.com/currencies/" +
+          this.props.name.toLowerCase().replace(/ /g, "-") +
+          "/";
+        break;
+      case "CryptoCompare":
+        link =
+          "https://cryptocompare.com/coins/" +
+          this.props.symbol.toLowerCase() +
+          "/markets/" +
+          this.props.market;
+        break;
+      case "LiveCoinWatch":
+        link =
+          "https://www.livecoinwatch.com/price/" +
+          this.props.name.replace(/ /g, "") +
+          "-" +
+          this.props.symbol;
+        break;
+      case "Messari":
+        link =
+          "https://messari.io/asset/" +
+          this.props.name.toLowerCase().replace(/ /g, "-") +
+          "/";
+        break;
+      case "CoinPaprika":
+        link = `https://coinpaprika.com/coin/${this.props.symbol.toLowerCase()}-${this.props.name
+          .toLowerCase()
+          .replace(/ /g, "-")}/`;
+        break;
+      default:
+        this.logger.log(
+          'No "marketCapSite" config item set, ignoring coin click'
+        );
+    }
 
-	handleApiError(error) {
-		
-		const newState = {
-			subscribed: false
-		};
+    link && window.open(link);
+  }
 
-		console.error(`${error} ... giving up`);
+  handleApiData(data) {
+    //console.dir(data);
 
-		this.setState(newState);
-	}
+    // 'data' is null if API subscription attempt returned no data. Hide the symbol
+    if (null === data) {
+      this.handleHide();
+      return;
+    }
 
-	handleHide(event) {
-		event && event.stopPropagation();
-		this.props.onHide && this.props.onHide(this.props);
-	}
+    this.setState(data, function () {
+      this.props.onData(data);
+    });
+  }
 
-	handlePriceChange(upOrDown) {
-		const newWeight = this.state.weight + upOrDown;
-		this.setState({weight: newWeight}, function() {
-			this.logger.log(this.props.symbol + ' new weight is: ' + this.state.weight);
-		});
-	}
+  handleApiError(error) {
+    const newState = {
+      subscribed: false,
+    };
 
-	handleStackValueChange(stackValue) {
-		if(stackValue !== this.state.stackValue) {
-			this.setState({ stackValue }, () => {
-				this.props.onStackValueChange && this.props.onStackValueChange(this.props, stackValue);
-			});
-		}
-	}
+    console.error(`${error} ... giving up`);
 
-	render() {
-		
-		//console.dir(this.props);
+    this.setState(newState);
+  }
 
-		const {denomination, formatters, isDust, name, pricePrecision, icon, settings, stack, symbol, url, ...props} = this.props,
-			  api = this.state.api,
-			  invalid = !(this.state.subscribed && this.state.price),
-			  priceChange = this.state.priceChange,
-			  price = this.state.price,
-			  weight = this.state.weight,
-			  priceUpdates = Object.keys(this.priceHistory).length + 1;
+  handleHide(event) {
+    event && event.stopPropagation();
+    this.props.onHide && this.props.onHide(this.props);
+  }
 
-		const coinDustClass = isDust ? 'Coin-dust' : '',
-			  coinValidityClass = `Coin-${invalid ? 'invalid' : 'valid'}`,
-			  coinClass = `Coin Coin-${symbol} ${coinValidityClass} ${coinDustClass}`;
+  handlePriceChange(upOrDown) {
+    const newWeight = this.state.weight + upOrDown;
+    this.setState({ weight: newWeight }, function () {
+      this.logger.log(
+        this.props.symbol + " new weight is: " + this.state.weight
+      );
+    });
+  }
 
-		if(price !== this.lastPrice) {
-			this.lastPrice = price;
-			this.priceHistory[new Date().getTime()] = price;
-		}
+  handleStackValueChange(stackValue) {
+    if (stackValue !== this.state.stackValue) {
+      this.setState({ stackValue }, () => {
+        this.props.onStackValueChange &&
+          this.props.onStackValueChange(this.props, stackValue);
+      });
+    }
+  }
 
-		//this.logger.log(name + ': ' + Object.keys(this.priceHistory).length + ' updates');
-		
-		return (
-			<div className={coinClass} data-weight={weight} onClick={this.handleClick}>
-				<CoinHideButton onClick={this.handleHide} />
-				<CoinLabel
-					name={name}
-					symbol={symbol}
-					icon={icon}
-					priceUpdates={priceUpdates}
-					url={url} />
-				<CoinPrice
-					change={priceChange}
-					price={price}
-					denomination={denomination}
-					priceHistory={this.priceHistory} />
-				<CoinStack
-					formatters={formatters}
-					onValueChange={this.handleStackValueChange}
-					symbol={symbol}
-					price={price}
-					settings={settings}
-					stack={stack} 
-					{...props} />				
-			</div>
-		);
-	}
+  render() {
+    //console.dir(this.props);
 
+    const {
+        denomination,
+        formatters,
+        isDust,
+        isNft,
+        name,
+        pricePrecision,
+        icon,
+        settings,
+        stack,
+        symbol,
+        url,
+        ...props
+      } = this.props,
+      api = this.state.api,
+      invalid = !(this.state.subscribed && this.state.price),
+      priceChange = this.state.priceChange,
+      price = this.state.price,
+      weight = this.state.weight,
+      priceUpdates = Object.keys(this.priceHistory).length + 1;
+
+    const coinDustClass = isDust ? "Coin-dust" : "",
+      coinNftClass = isNft ? "Coin-nft" : "",
+      coinValidityClass = `Coin-${invalid ? "invalid" : "valid"}`,
+      coinClass = `Coin Coin-${symbol} ${coinValidityClass} ${coinDustClass} ${coinNftClass}`;
+
+    if (price !== this.lastPrice) {
+      this.lastPrice = price;
+      this.priceHistory[new Date().getTime()] = price;
+    }
+
+    //this.logger.log(name + ': ' + Object.keys(this.priceHistory).length + ' updates');
+
+    return (
+      <div
+        className={coinClass}
+        data-weight={weight}
+        onClick={this.handleClick}
+      >
+        <CoinHideButton onClick={this.handleHide} />
+        <CoinLabel
+          name={name}
+          symbol={symbol}
+          icon={icon}
+          priceUpdates={priceUpdates}
+          url={url}
+        />
+        <CoinPrice
+          change={priceChange}
+          price={price}
+          denomination={denomination}
+          priceHistory={this.priceHistory}
+        />
+        <CoinStack
+          formatters={formatters}
+          onValueChange={this.handleStackValueChange}
+          symbol={symbol}
+          price={price}
+          settings={settings}
+          stack={stack}
+          {...props}
+        />
+      </div>
+    );
+  }
 }
 
 class CoinHideButton extends Component {
-	render() {
-		const {...props} = this.props;
-		return <div className="Coin-hide-button" {...props}>✕</div>;
-	}
+  render() {
+    const { ...props } = this.props;
+    return (
+      <div className="Coin-hide-button" {...props}>
+        ✕
+      </div>
+    );
+  }
 }

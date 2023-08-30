@@ -1,113 +1,128 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
-import './SettingsPanel.css';
+import "./SettingsPanel.css";
 
 class SettingsPanel extends Component {
+  constructor(props) {
+    super(props);
 
-	constructor(props) {
-		super(props);
+    this.state = props.settings;
 
-		this.state = props.settings;
+    this.handleChange = this.handleChange.bind(this);
+  }
 
-		this.handleChange = this.handleChange.bind(this);
-	}
+  componentDidMount() {}
 
-	componentDidMount() {
+  handleChange(event) {
+    const setting = event.target.attributes["data-setting"].value,
+      value =
+        event.target.localName === "input"
+          ? event.target.checked
+          : event.target.value;
 
-	}
+    let newState = {};
 
-	handleChange(event) {
-		const setting = event.target.attributes['data-setting'].value,
-			  value = event.target.localName === 'input' ? event.target.checked : event.target.value;
+    newState[setting] = value;
 
-		let newState = {};
+    this.setState(newState, function () {
+      this.props.onChange && this.props.onChange(newState);
+    });
+  }
 
-		newState[setting] = value;
+  render() {
+    const {
+      marketCapSite,
+      showWatchList,
+      showBalances,
+      showDust,
+      showNfts,
+      showStack,
+      ...state
+    } = this.state;
 
-		this.setState(newState, function() {
-			this.props.onChange && this.props.onChange(newState);
-		});
-	}
-	
-	render() {
+    return (
+      <div className={"Settings-panel" + (this.props.isOpen ? " open" : "")}>
+        <div className="Setting">
+          <label>
+            Market Cap Site:&nbsp;
+            <select
+              className={"Market-cap-site"}
+              data-setting="marketCapSite"
+              onChange={this.handleChange}
+              value={marketCapSite}
+            >
+              <option>CoinGecko</option>
+              <option>CoinPaprika</option>
+              <option>CoinMarketCap</option>
+              <option>CryptoCompare</option>
+              <option>LiveCoinWatch</option>
+              <option>Messari</option>
+            </select>
+          </label>
+        </div>
 
-		const {
-			marketCapSite,
-			showWatchList,
-		  	showBalances,
-		  	showDust,
-		  	showStack,
-		  	...state
-		} = this.state;	
+        <div className="Setting">
+          <label>
+            <input
+              type="checkbox"
+              data-setting="showStack"
+              defaultChecked={showStack}
+              onChange={this.handleChange}
+            />
+            Show Stack
+          </label>
+        </div>
 
-		return (
-			<div className={'Settings-panel' + (this.props.isOpen ? ' open' : '')}>
-				
-				<div className="Setting">
-					<label>Market Cap Site:&nbsp;
-						<select
-							className={'Market-cap-site'}
-							data-setting="marketCapSite"
-							onChange={this.handleChange}
-							value={marketCapSite}>
-								<option>CoinGecko</option>
-								<option>CoinPaprika</option>
-								<option>CoinMarketCap</option>
-								<option>CryptoCompare</option>
-								<option>LiveCoinWatch</option>
-								<option>Messari</option>
-						</select>
-					</label>
-				</div>
+        <div className="Setting">
+          <label>
+            <input
+              type="checkbox"
+              data-setting="showBalances"
+              defaultChecked={showBalances}
+              onChange={this.handleChange}
+            />
+            Show Balances
+          </label>
+        </div>
 
-				<div className="Setting">
-					<label>
-						<input
-							type="checkbox"
-							data-setting="showStack"
-							defaultChecked={showStack}
-							onChange={this.handleChange} />
-						Show Stack
-					</label>
-				</div>
+        <div className="Setting">
+          <label>
+            <input
+              type="checkbox"
+              data-setting="showWatchList"
+              defaultChecked={showWatchList}
+              onChange={this.handleChange}
+            />
+            Show Watch List
+          </label>
+        </div>
 
-				<div className="Setting">
-					<label>
-						<input
-							type="checkbox"
-							data-setting="showBalances"
-							defaultChecked={showBalances}
-							onChange={this.handleChange} />
-						Show Balances
-					</label>
-				</div>
+        <div className="Setting">
+          <label>
+            <input
+              type="checkbox"
+              data-setting="showDust"
+              defaultChecked={showDust}
+              onChange={this.handleChange}
+            />
+            Show Dust
+          </label>
+        </div>
 
-				<div className="Setting">
-					<label>
-						<input
-							type="checkbox"
-							data-setting="showWatchList"
-							defaultChecked={showWatchList}
-							onChange={this.handleChange} />
-						Show Watch List
-					</label>
-				</div>
-
-				<div className="Setting">
-					<label>
-						<input
-							type="checkbox"
-							data-setting="showDust"
-							defaultChecked={showDust}
-							onChange={this.handleChange} />
-						Show Dust
-					</label>
-				</div>
-				
-			</div>
-		);
-	}
-
+        <div className="Setting">
+          <label>
+            <input
+              type="checkbox"
+              data-setting="showNfts"
+              defaultChecked={showNfts}
+              onChange={this.handleChange}
+            />
+            Show NFTs
+          </label>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default SettingsPanel;

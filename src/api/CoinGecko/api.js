@@ -123,6 +123,8 @@ function apiInit(callback) {
 
 			initialized = true;
 
+			// Eagerly update subs, and then schedule updates
+			updateSubscriptions();
 			window.setInterval(() => updateSubscriptions(), INTERVAL_UPDATE_SUBSCRIPTION);
 			
 			callback && callback();

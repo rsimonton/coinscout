@@ -1,99 +1,114 @@
-import Wallet from './Wallet.js';
-import { getWalletInfo } from 'api/Ethplorer/api.js';
-import Logger from 'util/Logger.js';
+import Wallet from "./Wallet.js";
+import { getWalletInfo } from "api/Ethplorer/api.js";
+import Logger from "util/Logger.js";
 
 export default class Erc20Wallet extends Wallet {
+  constructor(props) {
+    super(props);
 
-	constructor(props) {
-		super(props);
-		
-		this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
-		this.logger = new Logger('Erc20Wallet.js');
-		
-		this.initializeWallet();		
-	}
+    this.handleWalletLoaded = this.handleWalletLoaded.bind(this);
+    this.logger = new Logger("Erc20Wallet.js");
+    this.tokenInfos = {};
 
-	initializeWallet() {
-		this.logger.log(`Initializing wallet ${this.props.address}...`);
+    this.initializeWallet();
+  }
 
-		getWalletInfo(this.props.address, this.handleWalletLoaded);
+  initializeWallet() {
+    this.logger.log(`Initializing wallet ${this.props.address}...`);
 
-		// Reload wallet
-		window.setInterval(
-			() => this.refreshWallet(),
-			this.REFRESH_INTERVAL
-		);
-	}
+    getWalletInfo(this.props.address, this.handleWalletLoaded);
 
-	refreshWallet() {
-		this.logger.log(`Refreshing wallet ${this.props.address}...`);
-		getWalletInfo(this.props.address, this.handleWalletLoaded);		
-	}
+    // Reload wallet
+    window.setInterval(() => this.refreshWallet(), this.REFRESH_INTERVAL);
+  }
 
-	handleWalletLoaded(walletInfo) {
-		
-		const onWalletLoaded = this.props.onWalletLoaded;
+  refreshWallet() {
+    this.logger.log(`Refreshing wallet ${this.props.address}...`);
+    getWalletInfo(this.props.address, this.handleWalletLoaded);
+  }
 
-		let token,
-			tokenInfo,
-			tokens = [],
-			tokensLoaded = 0;
+  handleWalletLoaded(walletInfo) {
+    const onWalletLoaded = this.props.onWalletLoaded;
 
-		this.logger.log(`Loaded wallet ${walletInfo.address}`);
+    let token,
+      tokenInfo,
+      tokens = [],
+      tokensLoaded = 0;
 
-		// API breaks out ETH, treating it differently that ERC20 tokens
-		if(walletInfo.ETH && walletInfo.ETH.balance) {
-			tokens.push({
-				address: '0x',
-				balance: walletInfo.ETH.balance,
-				decimals: 0,
-				name: 'Ethereum',
-				symbol: 'ETH'
-			});
-		}
+    this.logger.log(`Loaded wallet ${walletInfo.address}`);
 
-		walletInfo.tokens && walletInfo.tokens.forEach(token => {
-			tokens.push({
-				address: token.tokenInfo.address,
-				balance: token.balance,		// Note balance is @ walletInfo level
-				decimals: token.tokenInfo.decimals,
-				name: token.tokenInfo.name,
-				symbol: token.tokenInfo.symbol
-			})
-		});
+    // API breaks out ETH, treating it differently that ERC20 tokens
+    if (walletInfo.ETH && walletInfo.ETH.balance) {
+      tokens.push({
+        address: "0x",
+        balance: walletInfo.ETH.balance,
+        decimals: 0,
+        name: "Ethereum",
+        symbol: "ETH",
+      });
+    }
 
-		tokens.forEach(token => {
-			this.maybeAddToken(token).then(() => {
-				// Call onWalletLoaded only once all tokens have been loaded
-				++tokensLoaded === tokens.length && onWalletLoaded && onWalletLoaded(this);
-			});
-		});
-	}
+    walletInfo.tokens &&
+      walletInfo.tokens.forEach((token) => {
+        tokens.push({
+          address: token.tokenInfo.address,
+          balance: token.balance, // Note balance is @ walletInfo level
+          decimals: token.tokenInfo.decimals,
+          name: token.tokenInfo.name,
+          symbol: token.tokenInfo.symbol,
+          isNft: parseInt(token.tokenInfo.decimals) === 0,
+        });
+      });
 
-	async maybeAddToken(token) {
+    tokens.forEach((token) => {
+      this.maybeAddToken(token).then(() => {
+        // Call onWalletLoaded only once all tokens have been loaded
+        ++tokensLoaded === tokens.length &&
+          onWalletLoaded &&
+          onWalletLoaded(this);
+      });
+    });
+  }
 
-		if(!(token.name && token.symbol && token.balance)) {
-			this.logger.warnOnce(`Ignoring incomplete token: ${token.name} (${token.symbol}):`);
-			//console.dir(token);
-			return;
-		}
+  async maybeAddToken(token) {
+    if (!(token.name && token.symbol && token.balance)) {
+      this.logger.warnOnce(
+        `Ignoring incomplete token: ${token.name} (${token.symbol}):`
+      );
+      //console.dir(token);
+      return;
+    }
 
-		let tokenInfo = await this.getTokenInfo(token.symbol);
+    if (token.decimals == 0 && token.symbol != "ETH") {
+      // For now hard-pass on NFTs. TurboToads NFT was conflicting withte Turbo token bc same symbol TURBO.
+      // We should fix this by indexing tokens by their address rather than their symbol.
+      return;
+    }
 
-		if(!tokenInfo) {
-			this.logger.warnOnce(`No APIs have token info for '${token.name}' (${token.symbol}) ... dropping`);
-			return;
-		}
+    const tokenInfo =
+      this.tokenInfos[token.symbol] || (await this.getTokenInfo(token.symbol));
 
-		this.logger.log(`Loaded token ${token.name} (${token.symbol}) from ERC20 address ${this.props.address}`);
+    this.tokenInfos[token.symbol] = tokenInfo; // lazy
 
-		tokenInfo && this.addToken(
-			token.name,
-			token.symbol,
-			tokenInfo.ImageUrl,
-			token.balance * Math.pow(10, -token.decimals),
-			`https://etherscan.io/token/${token.address}` 	// token.contract address, not wallet address				
-		);
-	}
+    if (!tokenInfo) {
+      this.logger.warnOnce(
+        `No APIs have token info for '${token.name}' (${token.symbol}) ... dropping`
+      );
+      return;
+    }
 
+    this.logger.log(
+      `Loaded token ${token.name} (${token.symbol}) from ERC20 address ${this.props.address}`
+    );
+
+    tokenInfo &&
+      this.addToken(
+        token.name,
+        token.symbol,
+        tokenInfo.ImageUrl,
+        token.balance * Math.pow(10, -token.decimals),
+        `https://etherscan.io/token/${token.address}`, // token.contract address, not wallet address
+        token.isNft
+      );
+  }
 }
